@@ -1,0 +1,56 @@
+{% load url from future %}
+<script>
+(function($) {
+    $(function() {
+
+        if (!(new Resumable().support)) {
+            alert("No uploader support");
+        }
+        var r = new Resumable({
+            target: '{% url 'admin_resumable' %}',
+            query: {
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
+            },
+        });
+        r.assignBrowse($('#{{ id }}_input_file'));
+        r.on('fileAdded', function(file) {
+            r.upload();
+            $("form").attr("disabled", "disabled");
+        });
+        r.on('fileSuccess', function(file, message) {
+            $('#{{ id }}').val(message);
+            $("#{{ id }}_uploaded_status").html(message + ' Uploaded');
+            $("form").removeAttr("disabled");
+        });
+        r.on('fileError', function(file, message) {
+            $('form.resumable ul').append("<li>" + message + "</li>");
+        });
+        r.on('progress', function(file, message) {
+            $('progress').val(r.progress());
+        });
+        
+    });
+
+})(django.jQuery);
+
+
+</script>
+    <div id="container">
+        <p class="file-upload">
+            {% if value %}
+                Currently: 
+                {% if value.url %}
+                    <a id="{{ id }}_link" target="_new" href="{{ value.url }}">{{ value }}</a><br>
+                {% else %}
+                    {{ value }}
+                {% endif %}
+                Change:
+            {% else %}
+                <span id="{{ id }}_uploaded_status"></span>
+            {% endif %}
+             <input type="file" id="{{ id }}_input_file">
+        </p>
+        <progress value="0" max="1" style="width:500px"></progress>
+    </div>
+
+    <input type="hidden" name="{{ name }}" id="{{ id }}" value="{{ value }}">
