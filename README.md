@@ -26,6 +26,15 @@ Optionally:
 
 * Set ``ADMIN_RESUMABLE_SUBDIR``, default is ``'admin_uploaded'``
 
+
+Todo
+----
+
+* Reorganise Code
+* Make installable
+* Testing
+* Multiple file uploads?
+
 Thanks to
 ---------
 
