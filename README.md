@@ -30,10 +30,7 @@ Optionally:
 Todo
 ----
 
-* Reorganise Code
-* Make installable
 * Testing
-* Multiple file uploads?
 
 Thanks to
 ---------
