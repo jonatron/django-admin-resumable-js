@@ -6,7 +6,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-from django.core.files.base import ContentFile
+from django.core.files.base import File
 
 
 class ResumableFile(object):
@@ -26,7 +26,7 @@ class ResumableFile(object):
         ))
 
     @property
-    def chunks(self):
+    def chunk_names(self):
         """Iterates over all stored chunks.
         """
         chunks = []
@@ -37,8 +37,18 @@ class ResumableFile(object):
                 chunks.append(file)
         return chunks
 
+    def chunks(self):
+        """Iterates over all stored chunks.
+        """
+        chunks = []
+        files = sorted(self.storage.listdir('')[1])
+        for file in files:
+            if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
+                    self.chunk_suffix)):
+                yield self.storage.open(file, 'rb').read()
+
     def delete_chunks(self):
-        [self.storage.delete(chunk) for chunk in self.chunks]
+        [self.storage.delete(chunk) for chunk in self.chunk_names]
 
     @property
     def file(self):
@@ -46,10 +56,8 @@ class ResumableFile(object):
         """
         if not self.is_complete:
             raise Exception('Chunk(s) still missing')
-        content = StringIO()
-        for chunk in self.chunks:
-            content.write(self.storage.open(chunk).read())
-        return ContentFile(content.getvalue())
+
+        return self
 
     @property
     def filename(self):
@@ -83,6 +91,6 @@ class ResumableFile(object):
         """Gets chunks size.
         """
         size = 0
-        for chunk in self.chunks:
+        for chunk in self.chunk_names:
             size += self.storage.size(chunk)
         return size

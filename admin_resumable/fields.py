@@ -49,8 +49,9 @@ class FormAdminResumableFileField(FileField):
     widget = AdminResumableWidget
 
     def to_python(self, data):
-        if not data or data == "None":
-            raise ValidationError(self.error_messages['empty'])
+        if self.required:
+            if not data or data == "None":
+                raise ValidationError(self.error_messages['empty'])
         return data
 
 class ModelAdminResumableFileField(models.FileField):

@@ -43,5 +43,7 @@ def admin_resumable(request):
         if not r.chunk_exists:
             return HttpResponse('chunk not found', status=404)
         if r.is_complete:
+            actual_filename = storage.save(r.filename, r.file)
+            r.delete_chunks()
             return HttpResponse(get_chunks_subdir() + "/" + actual_filename)
         return HttpResponse('chunk already exists')
