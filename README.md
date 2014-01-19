@@ -25,6 +25,7 @@ class Foo(models.Model):
 Optionally:
 
 * Set ``ADMIN_RESUMABLE_SUBDIR``, default is ``'admin_uploaded'``
+* Set ``ADMIN_RESUMABLE_CHUNKSIZE``, default is ``"1*1024*1024"``
 
 
 Todo
