@@ -8,6 +8,7 @@
         }
         var r = new Resumable({
             target: '{% url 'admin_resumable' %}',
+            chunkSize: {{ chunkSize }},
             query: {
                 csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
             },
@@ -35,22 +36,25 @@
 
 
 </script>
-    <div id="container">
-        <p class="file-upload">
-            {% if value %}
-                Currently: 
-                {% if value.url %}
-                    <a id="{{ id }}_link" target="_new" href="{{ value.url }}">{{ value }}</a><br>
-                {% else %}
-                    {{ value }}
-                {% endif %}
-                Change:
+<div id="container">
+    <p class="file-upload">
+        {% if value %}
+            Currently: 
+            {% if value.url %}
+                <a id="{{ id }}_link" target="_new" href="{{ value.url }}">{{ value }}</a>
             {% else %}
-                <span id="{{ id }}_uploaded_status"></span>
+                {{ value }}
             {% endif %}
-             <input type="file" id="{{ id }}_input_file">
-        </p>
-        <progress value="0" max="1" style="width:500px"></progress>
-    </div>
+            {{ clear_checkbox }}
+            <br>
 
-    <input type="hidden" name="{{ name }}" id="{{ id }}" value="{{ value }}">
+            Change:
+        {% endif %}
+
+        <span id="{{ id }}_uploaded_status"></span>
+        <input type="file" id="{{ id }}_input_file">
+    </p>
+    <progress value="0" max="1" style="width:500px"></progress>
+</div>
+
+<input type="hidden" name="{{ name }}" id="{{ id }}" value="{{ value }}">
