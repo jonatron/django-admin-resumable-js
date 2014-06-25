@@ -11,6 +11,12 @@ setup(
     version='0.1',
     packages=['admin_resumable'],
     include_package_data=True,
+    package_data={
+        'admin_resumable': [
+            'templates/admin_resumable/file_input.html',
+            'static/admin_resumable/js/resumable.js',
+        ]
+    },
     license='MIT License',
     description='A Django app for the uploading of large files from the django admin site.',
     long_description=README,
