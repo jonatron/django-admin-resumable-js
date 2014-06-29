@@ -27,7 +27,7 @@ def get_chunks_dir():
 def get_storage():
     """
     Looks at the ADMIN_RESUMABLE_FILESYSTEM_STORAGE setting and returns
-    the storage class to use.
+    an instance of the storage class specified.
 
     Defaults to django.core.files.storage.FileSystemStorage.
 
