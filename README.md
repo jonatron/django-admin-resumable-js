@@ -38,7 +38,7 @@ from south.modelsinspector import add_introspection_rules
 
 add_introspection_rules([], [
     r'^admin_resumable\.fields\.ModelAdminResumableFileField'])
-
+```
 
 Todo
 ----
