@@ -4,7 +4,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from admin_resumable.files import ResumableFile
 from django.core.exceptions import ImproperlyConfigured
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import get_storage_class
 
 def ensure_dir(f):
     d = os.path.dirname(f)
@@ -24,9 +24,24 @@ def get_chunks_dir():
     ensure_dir(chunks_dir)
     return chunks_dir
 
+def get_storage():
+    """
+    Looks at the ADMIN_RESUMABLE_STORAGE setting and returns
+    an instance of the storage class specified.
+
+    Defaults to django.core.files.storage.FileSystemStorage.
+
+    Any custom storage class used here must either be a subclass of
+    django.core.files.storage.FileSystemStorage, or accept a location
+    init parameter.
+    """
+    return get_storage_class(getattr(
+        settings, 'ADMIN_RESUMABLE_STORAGE',
+        'django.core.files.storage.FileSystemStorage'
+        ))(location=get_chunks_dir())
+
 def admin_resumable(request):
-    chunks_dir = get_chunks_dir()
-    storage = FileSystemStorage(location=chunks_dir)
+    storage = get_storage()
     if request.method == 'POST':
         chunk = request.FILES.get('file')
         r = ResumableFile(storage, request.POST)
