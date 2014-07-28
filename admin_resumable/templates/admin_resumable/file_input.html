@@ -22,7 +22,7 @@
         r.assignBrowse($('#{{ id }}_input_file'));
         r.on('fileAdded', function(file) {
             r.upload();
-            $("form").addClass("{{ name }}_disabled", "true");
+            $("form").addClass("{{ name }}_disabled");
         });
         r.on('fileSuccess', function(file, message) {
             $('#{{ id }}').val(message);
@@ -48,6 +48,9 @@
             Currently: 
             {% if value.url %}
                 <a id="{{ id }}_link" target="_new" href="{{ value.url }}">{{ value }}</a>
+                {% if show_thumb %}
+                    <img src="{{ value.url }}" style="width:250px;">
+                {% endif %}
             {% else %}
                 {{ value }}
             {% endif %}
