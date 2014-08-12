@@ -50,8 +50,10 @@ class AdminResumableWidget(ResumableWidget):
         js = ["resumable.js"]
         return forms.Media(js=[static("admin_resumable/js/%s" % path) for path in js])
 
+
 class FormResumableFileField(FileField):
     widget = ResumableWidget
+
 
 class FormAdminResumableFileField(FileField):
     widget = AdminResumableWidget
@@ -61,6 +63,7 @@ class FormAdminResumableFileField(FileField):
             if not data or data == "None":
                 raise ValidationError(self.error_messages['empty'])
         return data
+
 
 class ModelAdminResumableFileField(models.FileField):
     def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):

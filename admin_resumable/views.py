@@ -6,13 +6,16 @@ from admin_resumable.files import ResumableFile
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import get_storage_class
 
+
 def ensure_dir(f):
     d = os.path.dirname(f)
     if not os.path.exists(d):
         os.makedirs(d)
 
+
 def get_chunks_subdir():
     return getattr(settings, 'ADMIN_RESUMABLE_SUBDIR', 'admin_uploaded')
+
 
 def get_chunks_dir():
     chunks_subdir = get_chunks_subdir()
@@ -23,6 +26,7 @@ def get_chunks_dir():
     chunks_dir = os.path.join(media_root, chunks_subdir)
     ensure_dir(chunks_dir)
     return chunks_dir
+
 
 def get_storage():
     """
@@ -38,7 +42,8 @@ def get_storage():
     return get_storage_class(getattr(
         settings, 'ADMIN_RESUMABLE_STORAGE',
         'django.core.files.storage.FileSystemStorage'
-        ))(location=get_chunks_dir())
+    ))(location=get_chunks_dir())
+
 
 def admin_resumable(request):
     storage = get_storage()

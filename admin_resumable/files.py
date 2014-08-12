@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 import fnmatch
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
-
 from django.core.files.base import File
 
 
@@ -33,7 +28,7 @@ class ResumableFile(object):
         files = sorted(self.storage.listdir('')[1])
         for file in files:
             if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
-                    self.chunk_suffix)):
+                                                self.chunk_suffix)):
                 chunks.append(file)
         return chunks
 
@@ -44,7 +39,7 @@ class ResumableFile(object):
         files = sorted(self.storage.listdir('')[1])
         for file in files:
             if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
-                    self.chunk_suffix)):
+                                                self.chunk_suffix)):
                 yield self.storage.open(file, 'rb').read()
 
     def delete_chunks(self):
@@ -72,10 +67,8 @@ class ResumableFile(object):
 
     @property
     def is_complete(self):
-        """Checks if all chunks are allready stored.
+        """Checks if all chunks are already stored.
         """
-        if self.storage.exists(self.filename):
-            return True
         return int(self.kwargs.get('resumableTotalSize')) == self.size
 
     def process_chunk(self, file):
