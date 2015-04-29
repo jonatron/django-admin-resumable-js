@@ -68,7 +68,6 @@ def pytest_configure():
         ),
         MEDIA_ROOT=os.path.join(os.path.dirname(__file__), 'media')
     )
-    print settings.MEDIA_ROOT
     try:
         import django
         django.setup()
