@@ -20,8 +20,10 @@ def test_file_uploads(admin_user, live_server, driver):
     driver.find_element_by_id("id_password").send_keys("password")
     driver.find_element_by_xpath('//input[@value="Log in"]').click()
 
+    driver.implicitly_wait(2)
     driver.get(live_server.url + '/admin/tests/foo/add/')
     driver.find_element_by_id("id_bar").send_keys("bat")
+
     driver.find_element_by_css_selector(
         'input[type="file"]').send_keys(test_file_path)
 
