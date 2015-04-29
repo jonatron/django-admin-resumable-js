@@ -19,7 +19,7 @@ Installation
 * Add a model field eg: ``from admin_resumable.fields import ModelAdminResumableFileField``
 
 
-::
+.. highlight:: python
     class Foo(models.Model):
         bar = models.CharField(max_length=200)
         foo = ModelAdminResumableFileField()
@@ -38,7 +38,7 @@ South
 
 If you use South for migration, then put this at the top of your models.py file to help South introspect your ``ModelAdminResumableFileField``:
 
-::
+.. highlight:: python
     from south.modelsinspector import add_introspection_rules
 
     add_introspection_rules([], [
