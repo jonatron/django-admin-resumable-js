@@ -15,6 +15,7 @@ before_install:
 
 install:
   - pip install tox
+  - pip install -e .
 
 script:
     - tox -e $TOX_ENV
