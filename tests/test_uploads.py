@@ -11,7 +11,7 @@ import time
 def create_test_file(file_path, size_in_megabytes):
     with open(file_path, 'wb') as bigfile:
         bigfile.seek(size_in_megabytes * 1024 * 1024)
-        bigfile.write('0')
+        bigfile.write(b'0')
 
 
 @pytest.mark.django_db
