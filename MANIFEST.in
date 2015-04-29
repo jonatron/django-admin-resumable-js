@@ -1,1 +1,3 @@
 include README.md
+include admin_resumable/templates/admin_resumable/file_input.html
+include admin_resumable/static/admin_resumable/js/resumable.js
