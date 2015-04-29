@@ -1,4 +1,9 @@
 from .models import Foo
+
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 import pytest
 import time
 
@@ -22,6 +27,7 @@ def test_file_uploads(admin_user, live_server, driver):
 
     driver.implicitly_wait(2)
     driver.get(live_server.url + '/admin/tests/foo/add/')
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "id_bar")))
     driver.find_element_by_id("id_bar").send_keys("bat")
 
     driver.find_element_by_css_selector(
