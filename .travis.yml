@@ -4,9 +4,14 @@ sudo: false
 
 env:
     - TOX_ENV=py27-django1.6
+    - TOX_ENV=py27-django1.7
+    - TOX_ENV=py27-django1.8
+    - TOX_ENV=py32-django1.6
+    - TOX_ENV=py32-django1.7
+    - TOX_ENV=py32-django1.8
 
 matrix:
-  fast_finish: true
+    fast_finish: true
 
 before_install:
     - "export DISPLAY=:99.0"
@@ -14,8 +19,7 @@ before_install:
     - sleep 3 # give xvfb some time to start
 
 install:
-  - pip install tox
-  - pip install -e .
+    - pip install tox
 
 script:
     - tox -e $TOX_ENV
