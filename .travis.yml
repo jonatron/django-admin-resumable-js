@@ -1,0 +1,16 @@
+language: python
+
+sudo: false
+
+env:
+    - TOX_ENV=py27-django1.6
+
+
+matrix:
+  fast_finish: true
+
+install:
+  - pip install tox
+
+script:
+    - tox -e $TOX_ENV
