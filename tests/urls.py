@@ -5,7 +5,7 @@ from distutils.version import StrictVersion
 import django
 
 
-if StrictVersion(django.get_version()) <= StrictVersion('1.6'):
+if StrictVersion(django.get_version()) < StrictVersion('1.7'):
     admin.autodiscover()
 
 urlpatterns = patterns('',
