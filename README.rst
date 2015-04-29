@@ -1,26 +1,30 @@
 django-admin-resumable-js
 =========================
 
+.. image:: https://api.travis-ci.org/jonatron/django-admin-resumable-js.svg?branch=master
+
 django-admin-resumable-js is a django app to allow you to upload large files from within the django admin site.
 
 Screenshot
 ----------
-![Image](screenshot.png?raw=true)
+
+.. image:: screenshot.png?raw=true
 
 
 Installation
 ------------
 
-* Add ```admin_resumable``` to your ```INSTALLED_APPS```
-* Add ```url(r'^admin_resumable/', include('admin_resumable.urls')),``` to your urls.py
-* Add a model field eg:
-```from admin_resumable.fields import ModelAdminResumableFileField```
+* Add ``admin_resumable`` to your ``INSTALLED_APPS``
+* Add ``url(r'^admin_resumable/', include('admin_resumable.urls')),`` to your urls.py
+* Add a model field eg: ``from admin_resumable.fields import ModelAdminResumableFileField``
 
-```python
-class Foo(models.Model):
-  bar = models.CharField(max_length=200)
-  foo = ModelAdminResumableFileField()
-```
+::
+
+    class Foo(models.Model):
+        bar = models.CharField(max_length=200)
+        foo = ModelAdminResumableFileField()
+
+
 
 Optionally:
 
@@ -34,17 +38,19 @@ South
 
 If you use South for migration, then put this at the top of your models.py file to help South introspect your ``ModelAdminResumableFileField``:
 
-```python
-from south.modelsinspector import add_introspection_rules
+::
 
-add_introspection_rules([], [
-    r'^admin_resumable\.fields\.ModelAdminResumableFileField'])
-```
+    from south.modelsinspector import add_introspection_rules
 
-Todo
-----
+    add_introspection_rules([], [
+        r'^admin_resumable\.fields\.ModelAdminResumableFileField'])
 
-* Testing
+
+
+Compatibility
+-------------
+
+{py27,py32,py33,py34}-django{1.6,1.7,1.8}
 
 Thanks to
 ---------

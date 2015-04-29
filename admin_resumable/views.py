@@ -1,10 +1,10 @@
-#from django.shortcuts import render, redirect
 import os
 from django.conf import settings
 from django.http import HttpResponse
 from admin_resumable.files import ResumableFile
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import get_storage_class
+from django.contrib.admin.views.decorators import staff_member_required
 
 
 def ensure_dir(f):
@@ -45,6 +45,7 @@ def get_storage():
     ))(location=get_chunks_dir())
 
 
+@staff_member_required
 def admin_resumable(request):
     storage = get_storage()
     if request.method == 'POST':
