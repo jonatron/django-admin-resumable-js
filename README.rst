@@ -2,6 +2,7 @@ django-admin-resumable-js
 =========================
 
 .. image:: https://api.travis-ci.org/jonatron/django-admin-resumable-js.svg?branch=master
+   :target: https://travis-ci.org/jonatron/django-admin-resumable-js
 
 django-admin-resumable-js is a django app to allow you to upload large files from within the django admin site.
 
