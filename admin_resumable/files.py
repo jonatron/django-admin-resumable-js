@@ -14,11 +14,8 @@ class ResumableFile(object):
     def chunk_exists(self):
         """Checks if the requested chunk exists.
         """
-        return self.storage.exists("%s%s%s" % (
-            self.filename,
-            self.chunk_suffix,
-            self.kwargs.get('resumableChunkNumber').zfill(4)
-        ))
+        return self.storage.exists(self.current_chunk_name) and \
+               self.storage.size(self.current_chunk_name) == int(self.kwargs.get('resumableCurrentChunkSize'))
 
     @property
     def chunk_names(self):
@@ -31,6 +28,14 @@ class ResumableFile(object):
                                                 self.chunk_suffix)):
                 chunks.append(file)
         return chunks
+
+    @property
+    def current_chunk_name(self):
+        return "%s%s%s" % (
+            self.filename,
+            self.chunk_suffix,
+            self.kwargs.get('resumableChunkNumber').zfill(4)
+        )
 
     def chunks(self):
         """Iterates over all stored chunks.
@@ -72,12 +77,9 @@ class ResumableFile(object):
         return int(self.kwargs.get('resumableTotalSize')) == self.size
 
     def process_chunk(self, file):
-        if not self.chunk_exists:
-            self.storage.save('%s%s%s' % (
-                self.filename,
-                self.chunk_suffix,
-                self.kwargs.get('resumableChunkNumber').zfill(4)
-            ), file)
+        if self.storage.exists(self.current_chunk_name):
+            self.storage.delete(self.current_chunk_name)
+        self.storage.save(self.current_chunk_name, file)
 
     @property
     def size(self):

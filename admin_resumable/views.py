@@ -51,14 +51,13 @@ def admin_resumable(request):
     if request.method == 'POST':
         chunk = request.FILES.get('file')
         r = ResumableFile(storage, request.POST)
-        if r.chunk_exists:
-            return HttpResponse('chunk already exists')
-        r.process_chunk(chunk)
+        if not r.chunk_exists:
+            r.process_chunk(chunk)
         if r.is_complete:
             actual_filename = storage.save(r.filename, r.file)
             r.delete_chunks()
             return HttpResponse(get_chunks_subdir() + "/" + actual_filename)
-        return HttpResponse()
+        return HttpResponse('chunk uploaded')
     elif request.method == 'GET':
         r = ResumableFile(storage, request.GET)
         if not r.chunk_exists:
@@ -67,4 +66,4 @@ def admin_resumable(request):
             actual_filename = storage.save(r.filename, r.file)
             r.delete_chunks()
             return HttpResponse(get_chunks_subdir() + "/" + actual_filename)
-        return HttpResponse('chunk already exists')
+        return HttpResponse('chunk exists')
