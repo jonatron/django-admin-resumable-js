@@ -1,9 +1,11 @@
 import pytest
 import os
 from selenium import webdriver
+from pyvirtualdisplay import Display
 
 browsers = {
     'firefox': webdriver.Firefox,
+    #'PhantomJS': webdriver.PhantomJS,
     #'chrome': webdriver.Chrome,
 }
 
@@ -11,9 +13,8 @@ browsers = {
 @pytest.fixture(scope='session',
                 params=browsers.keys())
 def driver(request):
-    if 'DISPLAY' not in os.environ:
-        pytest.skip('Test requires display server (export DISPLAY)')
-
+    display = Display(visible=0, size=(1024, 768))
+    display.start()
     b = browsers[request.param]()
 
     request.addfinalizer(lambda *args: b.quit())
