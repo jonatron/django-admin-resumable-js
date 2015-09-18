@@ -20,6 +20,8 @@ def create_test_file(file_path, size_in_megabytes):
 
 def clear_uploads():
     upload_path = os.path.join(settings.MEDIA_ROOT, 'admin_uploaded')
+    if not os.path.exists(upload_path):
+        return
     for the_file in os.listdir(upload_path):
         file_path = os.path.join(upload_path, the_file)
         try:
