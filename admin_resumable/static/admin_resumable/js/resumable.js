@@ -4,7 +4,6 @@
 * http://github.com/23/resumable.js
 * Steffen Tiedemann Christensen, steffen@23company.com
 */
-// version: https://github.com/23/resumable.js/commit/e4bcccb24115123391d32a4cca9cd9bf12cc6174
 
 (function(){
 "use strict";
@@ -45,13 +44,17 @@
       headers:{},
       preprocess:null,
       method:'multipart',
+      uploadMethod: 'POST',
+      testMethod: 'GET',
       prioritizeFirstAndLastChunk:false,
       target:'/',
+      parameterNamespace:'',
       testChunks:true,
       generateUniqueIdentifier:null,
+      getTarget:null,
       maxChunkRetries:undefined,
       chunkRetryInterval:undefined,
-      permanentErrors:[404, 415, 500, 501],
+      permanentErrors:[400, 404, 415, 500, 501],
       maxFiles:undefined,
       withCredentials:false,
       xhrTimeout:0,
@@ -97,7 +100,7 @@
         else { return $opt.defaults[o]; }
       }
     };
-    
+
     // EVENTS
     // catchAll(event, ...)
     // fileSuccess(file), fileProgress(file), fileAdded(file, event), fileRetry(file), fileError(file, message),
@@ -119,8 +122,8 @@
       if(event=='fileerror') $.fire('error', args[2], args[1]);
       if(event=='fileprogress') $.fire('progress');
     };
-    
-    
+
+
     // INTERNAL HELPER METHODS (handy, but ultimately not part of uploading)
     var $h = {
       stopEvent: function(e){
@@ -175,6 +178,9 @@
       },
       getTarget:function(params){
         var target = $.getOpt('target');
+        if(typeof target === 'function') {
+          return target(params);
+        }
         if(target.indexOf('?') < 0) {
           target += '?';
         } else {
@@ -186,19 +192,167 @@
 
     var onDrop = function(event){
       $h.stopEvent(event);
-      appendFilesFromFileList(event.dataTransfer.files, event);
+
+      //handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
+      if (event.dataTransfer && event.dataTransfer.items) {
+        loadFiles(event.dataTransfer.items, event);
+      }
+      //else handle them as files
+      else if (event.dataTransfer && event.dataTransfer.files) {
+        loadFiles(event.dataTransfer.files, event);
+      }
     };
-    var onDragOver = function(e) {
+    var preventDefault = function(e) {
       e.preventDefault();
     };
 
     // INTERNAL METHODS (both handy and responsible for the heavy load)
+    /**
+     * @summary This function loops over the files passed in from a drag and drop operation and gets them ready for appendFilesFromFileList
+     *            It attempts to use FileSystem API calls to extract files and subfolders if the dropped items include folders
+     *            That capability is only currently available in Chrome, but if it isn't available it will just pass the items along to
+     *            appendFilesFromFileList (via enqueueFileAddition to help with asynchronous processing.)
+     * @param files {Array} - the File or Entry objects to be processed depending on your browser support
+     * @param event {Object} - the drop event object
+     * @param [queue] {Object} - an object to keep track of our progress processing the dropped items
+     * @param [path] {String} - the relative path from the originally selected folder to the current files if extracting files from subfolders
+     */
+    var loadFiles = function (files, event, queue, path){
+      //initialize the queue object if it doesn't exist
+      if (!queue) {
+        queue = {
+          total: 0,
+          files: [],
+          event: event
+        };
+      }
+
+      //update the total number of things we plan to process
+      updateQueueTotal(files.length, queue);
+
+      //loop over all the passed in objects checking if they are files or folders
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var entry, reader;
+
+        if (file.isFile || file.isDirectory) {
+          //this is an object we can handle below with no extra work needed up front
+          entry = file;
+        }
+        else if (file.getAsEntry) {
+          //get the file as an entry object if we can using the proposed HTML5 api (unlikely to get implemented by anyone)
+          entry = file.getAsEntry();
+        }
+        else if (file.webkitGetAsEntry) {
+          //get the file as an entry object if we can using the Chrome specific webkit implementation
+          entry = file.webkitGetAsEntry();
+        }
+        else if (typeof file.getAsFile === 'function') {
+          //if this is still a DataTransferItem object, get it as a file object
+          enqueueFileAddition(file.getAsFile(), queue, path);
+          //we just added this file object to the queue so we can go to the next object in the loop and skip the processing below
+          continue;
+        }
+        else if (File && file instanceof File) {
+          //this is already a file object so just queue it up and move on
+          enqueueFileAddition(file, queue, path);
+          //we just added this file object to the queue so we can go to the next object in the loop and skip the processing below
+          continue;
+        }
+        else {
+          //we can't do anything with this object, decrement the expected total and skip the processing below
+          updateQueueTotal(-1, queue);
+          continue;
+        }
+
+        if (!entry) {
+          //there isn't anything we can do with this so decrement the total expected
+          updateQueueTotal(-1, queue);
+        }
+        else if (entry.isFile) {
+          //this is handling to read an entry object representing a file, parsing the file object is asynchronous which is why we need the queue
+          //currently entry objects will only exist in this flow for Chrome
+          entry.file(function(file) {
+            enqueueFileAddition(file, queue, path);
+          }, function(err) {
+            console.warn(err);
+          });
+        }
+        else if (entry.isDirectory) {
+          //this is handling to read an entry object representing a folder, parsing the directory object is asynchronous which is why we need the queue
+          //currently entry objects will only exist in this flow for Chrome
+          reader = entry.createReader();
+
+            var newEntries = [];
+            //wrap the callback in another function so we can store the path in a closure
+            var readDir = function(path){
+                reader.readEntries(
+                    //success callback: read entries out of the directory
+                    function(entries){
+                        if (entries.length>0){
+                            //add these results to the array of all the new stuff
+                            for (var i=0; i<entries.length; i++) { newEntries.push(entries[i]); }
+                            //call this function again as all the results may not have been sent yet
+                            readDir(entry.fullPath);
+                        }
+                        else {
+                            //we have now gotten all the results in newEntries so let's process them recursively
+                            loadFiles(newEntries, event, queue, path);
+                            //this was a directory rather than a file so decrement the expected file count
+                            updateQueueTotal(-1, queue);
+                        }
+                    },
+                    //error callback, most often hit if there is a directory with nothing inside it
+                    function(err) {
+                        //this was a directory rather than a file so decrement the expected file count
+                        updateQueueTotal(-1, queue);
+                        console.warn(err);
+                    }
+                );
+            };
+          readDir(entry.fullPath);
+        }
+      }
+    };
+
+    /**
+     * @summary Adjust the total number of files we are expecting to process
+     *          if decrementing and the new expected total is equal to the number processed, flush the queue
+     * @param addition {Number} - the number of additional files we expect to process (may be negative)
+     * @param queue {Object} - an object to keep track of our progress processing the dropped items
+     */
+    var updateQueueTotal = function(addition, queue){
+      queue.total += addition;
+
+      // If all the files we expect have shown up, then flush the queue.
+      if (queue.files.length === queue.total) {
+        appendFilesFromFileList(queue.files, queue.event);
+      }
+    };
+
+    /**
+     * @summary Add a file to the queue of processed files, if it brings the total up to the expected total, flush the queue
+     * @param file {Object} - File object to be passed along to appendFilesFromFileList eventually
+     * @param queue {Object} - an object to keep track of our progress processing the dropped items
+     * @param [path] {String} - the file's relative path from the originally dropped folder if we are parsing folder content (Chrome only for now)
+     */
+    var enqueueFileAddition = function(file, queue, path) {
+      //store the path to this file if it came in as part of a folder
+      if (path) file.relativePath = path + '/' + file.name;
+      queue.files.push(file);
+
+      // If all the files we expect have shown up, then flush the queue.
+      if (queue.files.length === queue.total) {
+        appendFilesFromFileList(queue.files, queue.event);
+      }
+    };
+
     var appendFilesFromFileList = function(fileList, event){
       // check for uploading too many files
       var errorCount = 0;
       var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback']);
       if (typeof(o.maxFiles)!=='undefined' && o.maxFiles<(fileList.length+$.files.length)) {
-        // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file 
+        // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
         if (o.maxFiles===1 && $.files.length===1 && fileList.length===1) {
           $.removeFile($.files[0]);
         } else {
@@ -206,15 +360,23 @@
           return false;
         }
       }
-      var files = [], fileName = '', fileType = '';
+      var files = [];
       $h.each(fileList, function(file){
-        fileName = file.name.split('.');
-        fileType = fileName[fileName.length-1].toLowerCase();
-        
-        if (o.fileType.length > 0 && !$h.contains(o.fileType, fileType)) {
-          o.fileTypeErrorCallback(file, errorCount++);
-          return false;
-        }
+        var fileName = file.name;
+        if(o.fileType.length > 0){
+			var fileTypeFound = false;
+			for(var index in o.fileType){
+				var extension = '.' + o.fileType[index];
+				if(fileName.indexOf(extension, fileName.length - extension.length) !== -1){
+					fileTypeFound = true;
+					break;
+				}
+			}
+			if (!fileTypeFound) {
+			  o.fileTypeErrorCallback(file, errorCount++);
+			  return false;
+			}
+		}
 
         if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
           o.minFileSizeErrorCallback(file, errorCount++);
@@ -225,19 +387,40 @@
           return false;
         }
 
-        // directories have size == 0
-        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
-          var f = new ResumableFile($, file);
-          $.files.push(f);
-          files.push(f);
-          $.fire('fileAdded', f, event);
+        function addFile(uniqueIdentifier){
+          if (!$.getFromUniqueIdentifier(uniqueIdentifier)) {(function(){
+            file.uniqueIdentifier = uniqueIdentifier;
+            var f = new ResumableFile($, file, uniqueIdentifier);
+            $.files.push(f);
+            files.push(f);
+            f.container = (typeof event != 'undefined' ? event.srcElement : null);
+            window.setTimeout(function(){
+              $.fire('fileAdded', f, event)
+            },0);
+          })()};
         }
+        // directories have size == 0
+        var uniqueIdentifier = $h.generateUniqueIdentifier(file)
+        if(uniqueIdentifier && typeof uniqueIdentifier.done === 'function' && typeof uniqueIdentifier.fail === 'function'){
+          uniqueIdentifier
+          .done(function(uniqueIdentifier){
+              addFile(uniqueIdentifier);
+          })
+          .fail(function(){
+              addFile();
+          });
+        }else{
+          addFile(uniqueIdentifier);
+        }
+
       });
-      $.fire('filesAdded', files);
+      window.setTimeout(function(){
+        $.fire('filesAdded', files)
+      },0);
     };
 
     // INTERNAL OBJECT TYPES
-    function ResumableFile(resumableObj, file){
+    function ResumableFile(resumableObj, file, uniqueIdentifier){
       var $ = this;
       $.opts = {};
       $.getOpt = resumableObj.getOpt;
@@ -246,9 +429,11 @@
       $.file = file;
       $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
       $.size = file.size;
-      $.relativePath = file.webkitRelativePath || $.fileName;
-      $.uniqueIdentifier = $h.generateUniqueIdentifier(file);
-      var _error = false;
+      $.relativePath = file.webkitRelativePath || file.relativePath || $.fileName;
+      $.uniqueIdentifier = uniqueIdentifier;
+      $._pause = false;
+      $.container = '';
+      var _error = uniqueIdentifier !== undefined;
 
       // Callback when something happens within the chunk
       var chunkEvent = function(event, message){
@@ -289,7 +474,7 @@
           }
         });
         if(abortCount>0) $.resumableObj.fire('fileProgress', $);
-      }
+      };
       $.cancel = function(){
         // Reset this file to be void
         var _chunks = $.chunks;
@@ -306,7 +491,11 @@
       };
       $.retry = function(){
         $.bootstrap();
-        $.resumableObj.upload();
+        var firedRetry = false;
+        $.resumableObj.on('chunkingComplete', function(){
+          if(!firedRetry) $.resumableObj.upload();
+          firedRetry = true;
+        });
       };
       $.bootstrap = function(){
         $.abort();
@@ -315,9 +504,16 @@
         $.chunks = [];
         $._prevProgress = 0;
         var round = $.getOpt('forceChunkSize') ? Math.ceil : Math.floor;
-        for (var offset=0; offset<Math.max(round($.file.size/$.getOpt('chunkSize')),1); offset++) {
-          $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
-        }
+        var maxOffset = Math.max(round($.file.size/$.getOpt('chunkSize')),1);
+        for (var offset=0; offset<maxOffset; offset++) {(function(offset){
+            window.setTimeout(function(){
+                $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
+                $.resumableObj.fire('chunkingProgress',$,offset/maxOffset);
+            },0);
+        })(offset)}
+        window.setTimeout(function(){
+            $.resumableObj.fire('chunkingComplete',$);
+        },0);
       };
       $.progress = function(){
         if(_error) return(1);
@@ -328,7 +524,7 @@
           if(c.status()=='error') error = true;
           ret += c.progress(true); // get chunk progress relative to entire file
         });
-        ret = (error ? 1 : (ret>0.999 ? 1 : ret));
+        ret = (error ? 1 : (ret>0.99999 ? 1 : ret));
         ret = Math.max($._prevProgress, ret); // We don't want to lose percentages when an upload is paused
         $._prevProgress = ret;
         return(ret);
@@ -342,7 +538,7 @@
           }
         });
         return(uploading);
-      };    
+      };
       $.isComplete = function(){
         var outstanding = false;
         $h.each($.chunks, function(chunk){
@@ -354,12 +550,24 @@
         });
         return(!outstanding);
       };
+      $.pause = function(pause){
+          if(typeof(pause)==='undefined'){
+              $._pause = ($._pause ? false : true);
+          }else{
+              $._pause = pause;
+          }
+      };
+      $.isPaused = function() {
+        return $._pause;
+      };
 
 
       // Bootstrap and return
+      $.resumableObj.fire('chunkingStart', $);
       $.bootstrap();
       return(this);
     }
+
 
     function ResumableChunk(resumableObj, fileObj, offset, callback){
       var $ = this;
@@ -405,25 +613,28 @@
         };
         $.xhr.addEventListener('load', testHandler, false);
         $.xhr.addEventListener('error', testHandler, false);
+        $.xhr.addEventListener('timeout', testHandler, false);
 
         // Add data from the query options
         var params = [];
-        var customQuery = $.getOpt('query'); 
+        var parameterNamespace = $.getOpt('parameterNamespace');
+        var customQuery = $.getOpt('query');
         if(typeof customQuery == 'function') customQuery = customQuery($.fileObj, $);
         $h.each(customQuery, function(k,v){
-          params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
+          params.push([encodeURIComponent(parameterNamespace+k), encodeURIComponent(v)].join('='));
         });
         // Add extra data to identify chunk
-        params.push(['resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
-        params.push(['resumableChunkSize', encodeURIComponent($.getOpt('chunkSize'))].join('='));
-        params.push(['resumableCurrentChunkSize', encodeURIComponent($.endByte - $.startByte)].join('='));
-        params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
-        params.push(['resumableType', encodeURIComponent($.fileObjType)].join('='));
-        params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
-        params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
-        params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
+        params.push([parameterNamespace+'resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
+        params.push([parameterNamespace+'resumableChunkSize', encodeURIComponent($.getOpt('chunkSize'))].join('='));
+        params.push([parameterNamespace+'resumableCurrentChunkSize', encodeURIComponent($.endByte - $.startByte)].join('='));
+        params.push([parameterNamespace+'resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
+        params.push([parameterNamespace+'resumableType', encodeURIComponent($.fileObjType)].join('='));
+        params.push([parameterNamespace+'resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
+        params.push([parameterNamespace+'resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
+        params.push([parameterNamespace+'resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
+        params.push([parameterNamespace+'resumableTotalChunks', encodeURIComponent($.fileObj.chunks.length)].join('='));
         // Append the relevant chunk and send it
-        $.xhr.open('GET', $h.getTarget(params));
+        $.xhr.open($.getOpt('testMethod'), $h.getTarget(params));
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
@@ -443,7 +654,7 @@
         var preprocess = $.getOpt('preprocess');
         if(typeof preprocess === 'function') {
           switch($.preprocessState) {
-          case 0: preprocess($); $.preprocessState = 1; return;
+          case 0: $.preprocessState = 1; preprocess($); return;
           case 1: return;
           case 2: break;
           }
@@ -478,7 +689,7 @@
             $.callback('retry', $.message());
             $.abort();
             $.retries++;
-            var retryInterval = $.getOpt('chunkRetryInterval');          
+            var retryInterval = $.getOpt('chunkRetryInterval');
             if(retryInterval !== undefined) {
               $.pendingRetry = true;
               setTimeout($.send, retryInterval);
@@ -489,6 +700,7 @@
         };
         $.xhr.addEventListener('load', doneHandler, false);
         $.xhr.addEventListener('error', doneHandler, false);
+        $.xhr.addEventListener('timeout', doneHandler, false);
 
         // Set up the basic query data from Resumable
         var query = {
@@ -510,28 +722,33 @@
         });
 
         var func   = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice'))),
-        bytes  = $.fileObj.file[func]($.startByte,$.endByte), 
+        bytes  = $.fileObj.file[func]($.startByte,$.endByte),
         data   = null,
         target = $.getOpt('target');
-        
+
+        var parameterNamespace = $.getOpt('parameterNamespace');
         if ($.getOpt('method') === 'octet') {
           // Add data from the query options
           data = bytes;
           var params = [];
           $h.each(query, function(k,v){
-            params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
+            params.push([encodeURIComponent(parameterNamespace+k), encodeURIComponent(v)].join('='));
           });
           target = $h.getTarget(params);
         } else {
           // Add data from the query options
           data = new FormData();
           $h.each(query, function(k,v){
-            data.append(k,v);
+            data.append(parameterNamespace+k,v);
           });
-          data.append($.getOpt('fileParameterName'), bytes);
+          data.append(parameterNamespace+$.getOpt('fileParameterName'), bytes);
         }
-        
-        $.xhr.open('POST', target);
+
+        var method = $.getOpt('uploadMethod');
+        $.xhr.open(method, target);
+        if ($.getOpt('method') === 'octet') {
+          $.xhr.setRequestHeader('Content-Type', 'binary/octet-stream');
+        }
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
@@ -550,15 +767,15 @@
         if($.pendingRetry) {
           // if pending retry then that's effectively the same as actively uploading,
           // there might just be a slight delay before the retry starts
-          return('uploading')
+          return('uploading');
         } else if(!$.xhr) {
           return('pending');
         } else if($.xhr.readyState<4) {
           // Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
           return('uploading');
         } else {
-          if($.xhr.status==200) {
-            // HTTP 200, perfect
+          if($.xhr.status == 200 || $.xhr.status == 201) {
+            // HTTP 200 or 201 (created) perfect
             return('success');
           } else if($h.contains($.getOpt('permanentErrors'), $.xhr.status) || $.retries >= $.getOpt('maxChunkRetries')) {
             // HTTP 415/500/501, permanent error
@@ -606,7 +823,7 @@
             found = true;
             return(false);
           }
-          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending' && file.chunks[0].preprocessState === 0) {
+          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending' && file.chunks[file.chunks.length-1].preprocessState === 0) {
             file.chunks[file.chunks.length-1].send();
             found = true;
             return(false);
@@ -617,13 +834,15 @@
 
       // Now, simply look for the next, best thing to upload
       $h.each($.files, function(file){
-        $h.each(file.chunks, function(chunk){
-          if(chunk.status()=='pending' && chunk.preprocessState === 0) {
-            chunk.send();
-            found = true;
-            return(false);
-          }
-        });
+        if(file.isPaused()===false){
+         $h.each(file.chunks, function(chunk){
+           if(chunk.status()=='pending' && chunk.preprocessState === 0) {
+             chunk.send();
+             found = true;
+             return(false);
+           }
+          });
+        }
         if(found) return(false);
       });
       if(found) return(true);
@@ -648,9 +867,6 @@
     $.assignBrowse = function(domNodes, isDirectory){
       if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
-      // We will create an <input> and overlay it on the domNode
-      // (crappy, but since HTML5 doesn't have a cross-browser.browse() method we haven't a choice.
-      //  FF4+ allows click() for this though: https://developer.mozilla.org/en/using_files_from_web_applications)
       $h.each(domNodes, function(domNode) {
         var input;
         if(domNode.tagName==='INPUT' && domNode.type==='file'){
@@ -658,16 +874,14 @@
         } else {
           input = document.createElement('input');
           input.setAttribute('type', 'file');
-          // Place <input /> with the dom node an position the input to fill the entire space
-          domNode.style.display = 'inline-block';
-          domNode.style.position = 'relative';
-          input.style.position = 'absolute';
-          input.style.top = input.style.left = input.style.bottom = input.style.right = 0;
-          input.style.opacity = 0;
-          //IE10 file input buttons hover right. 
-          //This makes the input field as wide as the assigned node for browseButton
-          input.style.width = domNode.clientWidth + 'px';
-          input.style.cursor = 'pointer';
+          input.style.display = 'none';
+          domNode.addEventListener('click', function(){
+            input.style.opacity = 0;
+            input.style.display='block';
+            input.focus();
+            input.click();
+            input.style.display='none';
+          }, false);
           domNode.appendChild(input);
         }
         var maxFiles = $.getOpt('maxFiles');
@@ -683,7 +897,7 @@
         }
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
-          appendFilesFromFileList(e.target.files);
+          appendFilesFromFileList(e.target.files,e);
           e.target.value = '';
         }, false);
       });
@@ -692,7 +906,8 @@
       if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
-        domNode.addEventListener('dragover', onDragOver, false);
+        domNode.addEventListener('dragover', preventDefault, false);
+        domNode.addEventListener('dragenter', preventDefault, false);
         domNode.addEventListener('drop', onDrop, false);
       });
     };
@@ -700,7 +915,8 @@
       if (typeof(domNodes.length) == 'undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
-        domNode.removeEventListener('dragover', onDragOver);
+        domNode.removeEventListener('dragover', preventDefault);
+        domNode.removeEventListener('dragenter', preventDefault);
         domNode.removeEventListener('drop', onDrop);
       });
     };
@@ -746,8 +962,8 @@
       });
       return(totalSize>0 ? totalDone/totalSize : 0);
     };
-    $.addFile = function(file){
-      appendFilesFromFileList([file]);
+    $.addFile = function(file, event){
+      appendFilesFromFileList([file], event);
     };
     $.removeFile = function(file){
       for(var i = $.files.length - 1; i >= 0; i--) {
