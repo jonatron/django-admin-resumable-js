@@ -15,6 +15,7 @@ Screenshot
 Installation
 ------------
 
+* pip install django-admin-resumable-js
 * Add ``admin_resumable`` to your ``INSTALLED_APPS``
 * Add ``url(r'^admin_resumable/', include('admin_resumable.urls')),`` to your urls.py
 * Add a model field eg: ``from admin_resumable.fields import ModelAdminResumableFileField``
@@ -46,6 +47,19 @@ If you use South for migration, then put this at the top of your models.py file 
     add_introspection_rules([], [
         r'^admin_resumable\.fields\.ModelAdminResumableFileField'])
 
+
+Versions
+--------
+
+1.0: First PyPI release
+
+1.1: Bug fix [1]
+
+
+[1] Django silently truncates incomplete chunks, due to the way the multipart
+parser works: https://github.com/django/django/blob/master/django/http/multipartparser.py
+This could result in a file being unable to be uploaded, or a corrupt file,
+depending on the situation.
 
 
 Compatibility
