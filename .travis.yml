@@ -26,6 +26,7 @@ before_install:
 
 install:
     - pip install tox
+    - pip install virtualenv<14.0.0
 
 script:
     - tox -e $TOX_ENV
