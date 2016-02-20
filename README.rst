@@ -55,6 +55,8 @@ Versions
 
 1.1: Bug fix [1]
 
+1.2: Django 1.9 Compatibility
+
 
 [1] Django silently truncates incomplete chunks, due to the way the multipart
 parser works: https://github.com/django/django/blob/master/django/http/multipartparser.py
@@ -65,7 +67,7 @@ depending on the situation.
 Compatibility
 -------------
 
-{py27,py32,py33,py34}-django{1.6,1.7,1.8}
+{py27,py32,py33,py34}-django{1.6,1.7,1.8,1.9}
 
 Thanks to
 ---------
