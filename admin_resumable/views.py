@@ -47,7 +47,7 @@ def get_storage():
 
 @staff_member_required
 def admin_resumable(request):
-    storage = get_storage()
+    storage = get_storage() # either use given upload_to or use content type to look it up
     if request.method == 'POST':
         chunk = request.FILES.get('file')
         r = ResumableFile(storage, request.POST)

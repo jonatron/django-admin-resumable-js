@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.utils.translation import ugettext_lazy
 from django.utils.safestring import mark_safe
+from django.contrib.contenttypes.models import ContentType
 
 
 class ResumableWidget(FileInput):
@@ -16,7 +17,8 @@ class ResumableWidget(FileInput):
     clear_checkbox_label = ugettext_lazy('Clear')
 
     def render(self, name, value, attrs=None, **kwargs):
-        # self.attrs {'upload_to': 'test'}
+        # (Pdb) self.attrs
+        # {'upload_to': 'omg', 'content_type_id': 7}
         chunkSize = getattr(settings, 'ADMIN_RESUMABLE_CHUNKSIZE', "1*1024*1024")
         show_thumb = getattr(settings, 'ADMIN_RESUMABLE_SHOW_THUMB', False)
         context = {'name': name,
@@ -72,9 +74,12 @@ class ModelAdminResumableFileField(models.FileField):
         super(ModelAdminResumableFileField, self).__init__(verbose_name, name, 'unused', **kwargs)
 
     def formfield(self, **kwargs):
+        content_type_id = ContentType.objects.get_for_model(self.model).id
         defaults = {
             'form_class': FormAdminResumableFileField,
-            'widget': AdminResumableWidget(attrs={'upload_to': self.orig_upload_to})
+            'widget': AdminResumableWidget(attrs={
+                'upload_to': self.orig_upload_to,
+                'content_type_id': content_type_id})
         }
         kwargs.update(defaults)
         return super(ModelAdminResumableFileField, self).formfield(**kwargs)
