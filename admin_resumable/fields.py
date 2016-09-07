@@ -16,6 +16,7 @@ class ResumableWidget(FileInput):
     clear_checkbox_label = ugettext_lazy('Clear')
 
     def render(self, name, value, attrs=None, **kwargs):
+        # self.attrs {'upload_to': 'test'}
         chunkSize = getattr(settings, 'ADMIN_RESUMABLE_CHUNKSIZE', "1*1024*1024")
         show_thumb = getattr(settings, 'ADMIN_RESUMABLE_SHOW_THUMB', False)
         context = {'name': name,
@@ -67,9 +68,13 @@ class FormAdminResumableFileField(FileField):
 
 class ModelAdminResumableFileField(models.FileField):
     def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
+        self.orig_upload_to = upload_to
         super(ModelAdminResumableFileField, self).__init__(verbose_name, name, 'unused', **kwargs)
 
     def formfield(self, **kwargs):
-        defaults = {'form_class': FormAdminResumableFileField, 'widget': AdminResumableWidget}
+        defaults = {
+            'form_class': FormAdminResumableFileField,
+            'widget': AdminResumableWidget(attrs={'upload_to': self.orig_upload_to})
+        }
         kwargs.update(defaults)
         return super(ModelAdminResumableFileField, self).formfield(**kwargs)
