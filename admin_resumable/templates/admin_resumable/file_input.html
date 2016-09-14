@@ -16,6 +16,8 @@
             chunkSize: {{ chunkSize }},
             query: {
                 csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
+                field_name: '{{ field_name }}',
+                content_type_id: '{{ content_type_id }}'
             },
         });
         r.assignBrowse($('#{{ id }}_input_file'));
@@ -34,7 +36,7 @@
         r.on('progress', function(file, message) {
             $('#{{ id }}_progress').val(r.progress());
         });
-        
+
     });
 
 })(django.jQuery);
@@ -44,11 +46,11 @@
 <div id="container">
     <p class="file-upload">
         {% if value %}
-            Currently: 
-            {% if value.url %}
-                <a id="{{ id }}_link" target="_new" href="{{ value.url }}">{{ value }}</a>
+            Currently:
+            {% if file_url %}
+                <a id="{{ id }}_link" target="_new" href="{{ file_url }}">{{ file_url }}</a>
                 {% if show_thumb %}
-                    <img src="{{ value.url }}" style="width:250px;">
+                    <img src="{{ file_url }}" style="width:250px;">
                 {% endif %}
             {% else %}
                 {{ value }}

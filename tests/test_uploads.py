@@ -2,6 +2,7 @@ from .models import Foo
 
 from django.test import client as client_module
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -33,6 +34,7 @@ def clear_uploads():
 
 @pytest.mark.django_db
 def test_fake_file_upload(admin_user, admin_client):
+    foo_ct = ContentType.objects.get_for_model(Foo)
     clear_uploads()
 
     payload = client_module.FakePayload()
@@ -52,7 +54,9 @@ def test_fake_file_upload(admin_user, admin_client):
     form_vals += form_value_list("resumableFilename", "foo.bar")
     form_vals += form_value_list("resumableTotalChunks", "1")
     form_vals += form_value_list("resumableTotalSize", file_size)
-    payload.write('\r\n'.join(form_vals+[
+    form_vals += form_value_list("content_type_id", str(foo_ct.id))
+    form_vals += form_value_list("field_name", "foo")
+    payload.write('\r\n'.join(form_vals + [
         '--' + client_module.BOUNDARY,
         'Content-Disposition: form-data; name="file"; filename=foo.bar',
         'Content-Type: application/octet-stream',
@@ -82,6 +86,7 @@ def test_fake_file_upload(admin_user, admin_client):
 
 @pytest.mark.django_db
 def test_fake_file_upload_incomplete_chunk(admin_user, admin_client):
+    foo_ct = ContentType.objects.get_for_model(Foo)
     clear_uploads()
 
     payload = client_module.FakePayload()
@@ -101,7 +106,9 @@ def test_fake_file_upload_incomplete_chunk(admin_user, admin_client):
     form_vals += form_value_list("resumableFilename", "foo.bar")
     form_vals += form_value_list("resumableTotalChunks", "6")
     form_vals += form_value_list("resumableTotalSize", file_size)
-    payload.write('\r\n'.join(form_vals+[
+    form_vals += form_value_list("content_type_id", str(foo_ct.id))
+    form_vals += form_value_list("field_name", "foo")
+    payload.write('\r\n'.join(form_vals + [
         '--' + client_module.BOUNDARY,
         'Content-Disposition: form-data; name="file"; filename=foo.bar',
         'Content-Type: application/octet-stream',
@@ -118,7 +125,7 @@ def test_fake_file_upload_incomplete_chunk(admin_user, admin_client):
         'wsgi.input': payload,
     }
     try:
-        response = admin_client.request(**r)
+        admin_client.request(**r)
     except AttributeError:
         pass  # we're not worried that this would 500
 
@@ -131,7 +138,9 @@ def test_fake_file_upload_incomplete_chunk(admin_user, admin_client):
         'resumableType': "text/plain",
         'resumableIdentifier': file_size + "-foobar",
         'resumableFilename': "foo.bar",
-        'resumableRelativePath':  "foo.bar",
+        'resumableRelativePath': "foo.bar",
+        'content_type_id': str(foo_ct.id),
+        'field_name': "foo",
     }
 
     # we need a fresh client because client.request breaks things
@@ -157,9 +166,38 @@ def test_real_file_upload(admin_user, live_server, driver):
         EC.presence_of_element_located((By.ID, "id_bar"))
     )
     driver.find_element_by_id("id_bar").send_keys("bat")
-    driver.find_element_by_css_selector(
-        'input[type="file"]').send_keys(test_file_path)
+    driver.find_element_by_id(
+        'id_foo_input_file').send_keys(test_file_path)
     status_text = driver.find_element_by_id("id_foo_uploaded_status").text
+    print("status_text", status_text)
+    i = 0
+    while i < 5:
+        if "Uploaded" in status_text:
+            return  # success
+        time.sleep(1)
+        i += 1
+    raise Exception  # something went wrong
+
+
+@pytest.mark.django_db
+def test_real_file_upload_with_upload_to(admin_user, live_server, driver):
+    test_file_path = "/tmp/test_small_file.bin"
+    create_test_file(test_file_path, 5)
+
+    driver.get(live_server.url + '/admin/')
+    driver.find_element_by_id('id_username').send_keys("admin")
+    driver.find_element_by_id("id_password").send_keys("password")
+    driver.find_element_by_xpath('//input[@value="Log in"]').click()
+    driver.implicitly_wait(2)
+    driver.get(live_server.url + '/admin/tests/foo/add/')
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "id_bar"))
+    )
+    driver.find_element_by_id("id_bar").send_keys("bat")
+    driver.find_element_by_id(
+        'id_bat_input_file').send_keys(test_file_path)
+    status_text = driver.find_element_by_id("id_bat_uploaded_status").text
+    print("status_text", status_text)
     i = 0
     while i < 5:
         if "Uploaded" in status_text:
