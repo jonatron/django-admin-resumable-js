@@ -1,6 +1,5 @@
 import os
 
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -13,34 +12,10 @@ from django.templatetags.static import static
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy
 
+from admin_resumable.settings import ADMIN_RESUMABLE_CHUNKSIZE, \
+    ADMIN_RESUMABLE_SHOW_THUMB, ADMIN_RESUMABLE_PARALLEL, \
+    ADMIN_RESUMABLE_FIRSTLAST, ADMIN_RESUMABLE_RETRIES
 from .views import get_storage
-
-
-ADMIN_RESUMABLE_CHUNKSIZE = getattr(
-    settings,
-    'ADMIN_RESUMABLE_CHUNKSIZE',
-    '1*1024*1024'
-)
-ADMIN_RESUMABLE_SHOW_THUMB = getattr(
-    settings,
-    'ADMIN_RESUMABLE_SHOW_THUMB',
-    False
-)
-ADMIN_RESUMABLE_PARALLEL = getattr(
-    settings,
-    'ADMIN_RESUMABLE_PARALLEL',
-    3
-)
-ADMIN_RESUMABLE_FIRSTLAST = getattr(
-    settings,
-    'ADMIN_RESUMABLE_FIRSTLAST',
-    False
-)
-ADMIN_RESUMABLE_RETRIES = getattr(
-    settings,
-    'ADMIN_RESUMABLE_RETRIES',
-    None
-)
 
 
 def get_upload_to(ct_id, field_name):
