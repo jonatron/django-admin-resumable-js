@@ -43,7 +43,6 @@ class ResumableFile(object):
         """
         Iterates over all stored chunks.
         """
-        chunks = []
         files = sorted(self.storage.listdir('')[1])
         for file in files:
             if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
