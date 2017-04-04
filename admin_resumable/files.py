@@ -53,7 +53,8 @@ class ResumableFile(object):
                 yield self.storage.open(file, 'rb').read()
 
     def delete_chunks(self):
-        [self.storage.delete(chunk) for chunk in self.chunk_names]
+        for chunk in self.chunk_names:
+            self.storage.delete(chunk)
 
     @property
     def file(self):
