@@ -3,10 +3,10 @@ from __future__ import absolute_import
 import os
 
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
-from django.core.files.storage import get_storage_class
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
+from django.core.files.storage import get_storage_class
 from django.http import HttpResponse
 
 from .files import ResumableFile
