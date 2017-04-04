@@ -46,3 +46,9 @@ ADMIN_RESUMABLE_SIZE_PREFIX = getattr(
     'ADMIN_RESUMABLE_SIZE_PREFIX',
     True
 )
+# default storage class for ModelAdminResumableFileField
+ADMIN_RESUMABLE_STORAGE = getattr(
+    settings,
+    'ADMIN_RESUMABLE_STORAGE',
+    'django.core.files.storage.FileSystemStorage'
+)

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import os
 
 from django.conf import settings
@@ -7,7 +9,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
 
-from admin_resumable.files import ResumableFile
+from .files import ResumableFile
+from .settings import ADMIN_RESUMABLE_STORAGE
 
 
 def ensure_dir(f):
@@ -51,14 +54,8 @@ def get_storage(upload_to):
         base_url = settings.MEDIA_URL + get_chunks_subdir()
         location = get_chunks_dir()
 
-    storage_class_name = getattr(
-        settings,
-        'ADMIN_RESUMABLE_STORAGE',
-        'django.core.files.storage.FileSystemStorage'
-    )
-    return get_storage_class(storage_class_name)(
-        location=location, base_url=base_url
-    )
+    storage_class = get_storage_class(ADMIN_RESUMABLE_STORAGE)
+    return storage_class(location=location, base_url=base_url)
 
 
 def get_upload_to(request):
