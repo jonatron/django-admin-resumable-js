@@ -16,6 +16,18 @@ from django.utils.translation import ugettext_lazy
 from .views import get_storage
 
 
+ADMIN_RESUMABLE_CHUNKSIZE = getattr(
+    settings,
+    'ADMIN_RESUMABLE_CHUNKSIZE',
+    '1*1024*1024'
+)
+ADMIN_RESUMABLE_SHOW_THUMB = getattr(
+    settings,
+    'ADMIN_RESUMABLE_SHOW_THUMB',
+    False
+)
+
+
 def get_upload_to(ct_id, field_name):
     ct = ContentType.objects.get_for_id(ct_id)
     model_cls = ct.model_class()
@@ -35,18 +47,18 @@ class ResumableWidget(FileInput):
             file_name = os.path.basename(value.name)
             file_url = storage.url(file_name)
         else:
-            file_url = ""
+            file_url = ''
 
-        chunkSize = getattr(settings, 'ADMIN_RESUMABLE_CHUNKSIZE', "1*1024*1024")
-        show_thumb = getattr(settings, 'ADMIN_RESUMABLE_SHOW_THUMB', False)
-        context = {'name': name,
-                   'value': value,
-                   'id': attrs['id'],
-                   'chunkSize': chunkSize,
-                   'show_thumb': show_thumb,
-                   'field_name': self.attrs['field_name'],
-                   'content_type_id': self.attrs['content_type_id'],
-                   'file_url': file_url}
+        context = {
+            'name': name,
+            'value': value,
+            'id': attrs['id'],
+            'chunkSize': ADMIN_RESUMABLE_CHUNKSIZE,
+            'show_thumb': ADMIN_RESUMABLE_SHOW_THUMB,
+            'field_name': self.attrs['field_name'],
+            'content_type_id': self.attrs['content_type_id'],
+            'file_url': file_url,
+        }
 
         if not self.is_required:
             template_with_clear = '<span class="clearable-file-input">%(clear)s <label for="%(clear_checkbox_id)s">%(clear_checkbox_label)s</label></span>'
