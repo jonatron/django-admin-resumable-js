@@ -58,22 +58,24 @@ def get_storage(upload_to):
     return storage_class(location=location, base_url=base_url)
 
 
-def get_upload_to(request):
+def get_model_field(request):
+    """
+    Determine the model field for the uploaded file/chunk using the
+    'content_type_id' and 'field_name' request parameters.
+    """
     params = request.GET
     if request.method == 'POST':
         params = request.POST
 
     ctype = ContentType.objects.get_for_id(params['content_type_id'])
     # noinspection PyProtectedMember
-    field = ctype.model_class()._meta.get_field(params['field_name'])
-
-    return field.orig_upload_to
+    return ctype.model_class()._meta.get_field(params['field_name'])
 
 
 @staff_member_required
 def admin_resumable(request):
-    upload_to = get_upload_to(request)
-    storage = get_storage(upload_to)
+    field = get_model_field(request)
+    storage = get_storage(upload_to=field.orig_upload_to)
 
     if request.method == 'POST':
         chunk = request.FILES.get('file')
@@ -81,7 +83,9 @@ def admin_resumable(request):
         if not r.chunk_exists:
             r.process_chunk(chunk)
         if r.is_complete:
-            actual_filename = storage.save(r.filename, r.file)
+            actual_filename = storage.save(
+                r.filename, r.file, max_length=field.max_length
+            )
             r.delete_chunks()
             return HttpResponse(storage.url(actual_filename))
         return HttpResponse('chunk uploaded')
@@ -91,7 +95,9 @@ def admin_resumable(request):
         if not r.chunk_exists:
             return HttpResponse('chunk not found', status=404)
         if r.is_complete:
-            actual_filename = storage.save(r.filename, r.file)
+            actual_filename = storage.save(
+                r.filename, r.file, max_length=field.max_length
+            )
             r.delete_chunks()
             return HttpResponse(storage.url(actual_filename))
         return HttpResponse('chunk exists')
