@@ -1,17 +1,17 @@
 import os
 
-from django.forms.widgets import FileInput
-from django.forms import forms
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.templatetags.static import static
-from django.template import loader
+from django.forms import forms
 from django.forms.fields import FileField
 from django.forms.widgets import CheckboxInput
-from django.core.exceptions import ValidationError
-from django.conf import settings
-from django.utils.translation import ugettext_lazy
+from django.forms.widgets import FileInput
+from django.template import loader
+from django.templatetags.static import static
 from django.utils.safestring import mark_safe
-from django.contrib.contenttypes.models import ContentType
+from django.utils.translation import ugettext_lazy
 
 from .views import get_storage
 
