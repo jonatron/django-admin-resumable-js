@@ -62,16 +62,14 @@ def get_storage(upload_to):
 
 
 def get_upload_to(request):
+    params = request.GET
     if request.method == 'POST':
-        ct_id = request.POST['content_type_id']
-        field_name = request.POST['field_name']
-    else:
-        ct_id = request.GET['content_type_id']
-        field_name = request.GET['field_name']
+        params = request.POST
 
-    ct = ContentType.objects.get_for_id(ct_id)
-    model_cls = ct.model_class()
-    field = model_cls._meta.get_field(field_name)
+    ctype = ContentType.objects.get_for_id(params['content_type_id'])
+    # noinspection PyProtectedMember
+    field = ctype.model_class()._meta.get_field(params['field_name'])
+
     return field.orig_upload_to
 
 
