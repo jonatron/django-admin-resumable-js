@@ -82,6 +82,10 @@ class ResumableFile(object):
         return filename
 
     @property
+    def name(self):
+        return self.filename
+
+    @property
     def is_complete(self):
         """
         Checks if all chunks are already stored.
@@ -91,6 +95,7 @@ class ResumableFile(object):
     def process_chunk(self, file):
         if self.storage.exists(self.current_chunk_name):
             self.storage.delete(self.current_chunk_name)
+        # chunk filenames are not limited by the field's max_length
         self.storage.save(self.current_chunk_name, file)
 
     @property
