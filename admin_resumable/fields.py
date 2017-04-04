@@ -26,6 +26,21 @@ ADMIN_RESUMABLE_SHOW_THUMB = getattr(
     'ADMIN_RESUMABLE_SHOW_THUMB',
     False
 )
+ADMIN_RESUMABLE_PARALLEL = getattr(
+    settings,
+    'ADMIN_RESUMABLE_PARALLEL',
+    3
+)
+ADMIN_RESUMABLE_FIRSTLAST = getattr(
+    settings,
+    'ADMIN_RESUMABLE_FIRSTLAST',
+    False
+)
+ADMIN_RESUMABLE_RETRIES = getattr(
+    settings,
+    'ADMIN_RESUMABLE_RETRIES',
+    None
+)
 
 
 def get_upload_to(ct_id, field_name):
@@ -54,6 +69,9 @@ class ResumableWidget(FileInput):
             'value': value,
             'id': attrs['id'],
             'chunkSize': ADMIN_RESUMABLE_CHUNKSIZE,
+            'simultaneousUploads': ADMIN_RESUMABLE_PARALLEL,
+            'prioritizeFirstAndLastChunk': ADMIN_RESUMABLE_FIRSTLAST,
+            'maxChunkRetries': ADMIN_RESUMABLE_RETRIES,
             'show_thumb': ADMIN_RESUMABLE_SHOW_THUMB,
             'field_name': self.attrs['field_name'],
             'content_type_id': self.attrs['content_type_id'],
@@ -77,6 +95,7 @@ class ResumableWidget(FileInput):
             )
             clear_checkbox = mark_safe(template_with_clear % substitutions)
             context.update({'clear_checkbox': clear_checkbox})
+
         return loader.render_to_string(self.template_name, context)
 
     def value_from_datadict(self, data, files, name):
