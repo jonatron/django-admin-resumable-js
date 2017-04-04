@@ -40,3 +40,9 @@ ADMIN_RESUMABLE_CHUNKSUFFIX = getattr(
     'ADMIN_RESUMABLE_CHUNKSUFFIX',
     '_part_'
 )
+# put final filesize as prefix in filename
+ADMIN_RESUMABLE_SIZE_PREFIX = getattr(
+    settings,
+    'ADMIN_RESUMABLE_SIZE_PREFIX',
+    True
+)

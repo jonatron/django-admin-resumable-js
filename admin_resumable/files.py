@@ -3,7 +3,8 @@ import fnmatch
 
 from django.core.files.base import File
 
-from admin_resumable.settings import ADMIN_RESUMABLE_CHUNKSUFFIX
+from admin_resumable.settings import ADMIN_RESUMABLE_CHUNKSUFFIX, \
+    ADMIN_RESUMABLE_SIZE_PREFIX
 
 
 class ResumableFile(object):
@@ -71,10 +72,14 @@ class ResumableFile(object):
         filename = self.kwargs.get('resumableFilename')
         if '/' in filename:
             raise Exception('Invalid filename')
-        return "%s_%s" % (
-            self.kwargs.get('resumableTotalSize'),
-            filename
-        )
+
+        if ADMIN_RESUMABLE_SIZE_PREFIX:
+            return "%s_%s" % (
+                self.kwargs.get('resumableTotalSize'),
+                filename
+            )
+
+        return filename
 
     @property
     def is_complete(self):
