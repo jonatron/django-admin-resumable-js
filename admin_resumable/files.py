@@ -8,9 +8,9 @@ from admin_resumable.settings import ADMIN_RESUMABLE_CHUNKSUFFIX, \
 
 
 class ResumableFile(object):
-    def __init__(self, storage, kwargs):
+    def __init__(self, storage, params):
         self.storage = storage
-        self.kwargs = kwargs
+        self.params = params
         self.chunk_suffix = ADMIN_RESUMABLE_CHUNKSUFFIX
 
     @property
@@ -19,7 +19,7 @@ class ResumableFile(object):
         Checks if the requested chunk exists.
         """
         return self.storage.exists(self.current_chunk_name) and \
-               self.storage.size(self.current_chunk_name) == int(self.kwargs.get('resumableCurrentChunkSize'))
+               self.storage.size(self.current_chunk_name) == int(self.params.get('resumableCurrentChunkSize'))
 
     @property
     def chunk_names(self):
@@ -37,7 +37,7 @@ class ResumableFile(object):
         return "%s%s%s" % (
             self.filename,
             self.chunk_suffix,
-            self.kwargs.get('resumableChunkNumber').zfill(4)
+            self.params.get('resumableChunkNumber').zfill(4)
         )
 
     def chunks(self):
@@ -69,13 +69,13 @@ class ResumableFile(object):
         """
         Gets the filename.
         """
-        filename = self.kwargs.get('resumableFilename')
+        filename = self.params.get('resumableFilename')
         if '/' in filename:
             raise Exception('Invalid filename')
 
         if ADMIN_RESUMABLE_SIZE_PREFIX:
             return "%s_%s" % (
-                self.kwargs.get('resumableTotalSize'),
+                self.params.get('resumableTotalSize'),
                 filename
             )
 
@@ -86,7 +86,7 @@ class ResumableFile(object):
         """
         Checks if all chunks are already stored.
         """
-        return int(self.kwargs.get('resumableTotalSize')) == self.size
+        return int(self.params.get('resumableTotalSize')) == self.size
 
     def process_chunk(self, file):
         if self.storage.exists(self.current_chunk_name):
