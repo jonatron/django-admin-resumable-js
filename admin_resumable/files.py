@@ -3,12 +3,14 @@ import fnmatch
 
 from django.core.files.base import File
 
+from admin_resumable.settings import ADMIN_RESUMABLE_CHUNKSUFFIX
+
 
 class ResumableFile(object):
     def __init__(self, storage, kwargs):
         self.storage = storage
         self.kwargs = kwargs
-        self.chunk_suffix = "_part_"
+        self.chunk_suffix = ADMIN_RESUMABLE_CHUNKSUFFIX
 
     @property
     def chunk_exists(self):
