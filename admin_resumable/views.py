@@ -44,19 +44,21 @@ def get_storage(upload_to):
     init parameter.
     """
     if upload_to:
-        location = settings.MEDIA_ROOT + upload_to
-        url_path = settings.MEDIA_URL + upload_to
+        location = os.path.join(settings.MEDIA_ROOT, upload_to)
+        base_url = os.path.join(settings.MEDIA_URL, upload_to)
         ensure_dir(location)
     else:
-        url_path = settings.MEDIA_URL + get_chunks_subdir()
+        base_url = settings.MEDIA_URL + get_chunks_subdir()
         location = get_chunks_dir()
+
     storage_class_name = getattr(
         settings,
         'ADMIN_RESUMABLE_STORAGE',
         'django.core.files.storage.FileSystemStorage'
     )
     return get_storage_class(storage_class_name)(
-        location=location, base_url=url_path)
+        location=location, base_url=base_url
+    )
 
 
 def get_upload_to(request):
