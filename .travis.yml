@@ -9,12 +9,14 @@ env:
     - TOX_ENV=py27-django1.8
     - TOX_ENV=py27-django1.9
     - TOX_ENV=py27-django1.10
+    - TOX_ENV=py27-django1.11
     - TOX_ENV=py34-django1.8
     - TOX_ENV=py34-django1.9
     - TOX_ENV=py34-django1.10
     - TOX_ENV=py35-django1.8
     - TOX_ENV=py35-django1.9
     - TOX_ENV=py35-django1.10
+    - TOX_ENV=py35-django1.11
 
 matrix:
     fast_finish: true
