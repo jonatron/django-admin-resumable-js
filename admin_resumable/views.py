@@ -87,7 +87,7 @@ def admin_resumable(request):
                 r.filename, r.file, max_length=field.max_length
             )
             r.delete_chunks()
-            return HttpResponse(storage.url(actual_filename))
+            return HttpResponse(field.generate_filename(None, actual_filename))
         return HttpResponse('chunk uploaded')
 
     elif request.method == 'GET':
@@ -99,5 +99,5 @@ def admin_resumable(request):
                 r.filename, r.file, max_length=field.max_length
             )
             r.delete_chunks()
-            return HttpResponse(storage.url(actual_filename))
+            return HttpResponse(field.generate_filename(None, actual_filename))
         return HttpResponse('chunk exists')
