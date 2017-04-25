@@ -90,7 +90,7 @@ class ResumableFile(object):
         """
         Checks if all chunks are already stored.
         """
-        return int(self.params.get('resumableTotalSize')) == self.size
+        return self.size >= int(self.params.get('resumableTotalSize'))
 
     def process_chunk(self, file):
         if self.storage.exists(self.current_chunk_name):
@@ -101,9 +101,6 @@ class ResumableFile(object):
     @property
     def size(self):
         """
-        Gets chunks size.
+        Sum of size of all chunks.
         """
-        size = 0
-        for chunk in self.chunk_names:
-            size += self.storage.size(chunk)
-        return size
+        return sum(self.storage.size(n) for n in self.chunk_names)
