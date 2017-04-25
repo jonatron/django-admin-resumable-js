@@ -113,8 +113,8 @@ class ModelAdminResumableFileField(models.FileField):
         super(ModelAdminResumableFileField, self).__init__(
             verbose_name=verbose_name,
             name=name,
-            upload_to='unused',
-            # storage=storage,
+            upload_to=upload_to,
+            storage=storage,
             **kwargs
         )
 
