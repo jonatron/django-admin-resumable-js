@@ -26,11 +26,11 @@ class ResumableFile(object):
         """
         Iterates over all stored chunks.
         """
-        files = sorted(self.storage.listdir('')[1])
-        for file in files:
-            if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
-                                                self.chunk_suffix)):
-                yield file
+        pattern = '%s%s*' % (self.filename, self.chunk_suffix)
+        filenames = sorted(self.storage.listdir('')[1])
+        for filename in filenames:
+            if fnmatch.fnmatch(filename, pattern):
+                yield filename
 
     @property
     def current_chunk_name(self):
