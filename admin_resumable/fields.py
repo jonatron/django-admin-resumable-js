@@ -56,8 +56,8 @@ class ResumableWidget(FileInput):
         if not self.is_required:
             template_with_clear = \
                 '<span class="clearable-file-input">%(clear)s ' \
-                '<label for="%(clear_checkbox_id)s">%(clear_checkbox_label)s<' \
-                '/label></span>'
+                '<label for="%(clear_checkbox_id)s">%(clear_checkbox_label)s' \
+                '</label></span>'
             substitutions = {
                 'clear_checkbox_id': attrs['id'] + "-clear-id",
                 'clear_checkbox_name': attrs['id'] + "-clear",
