@@ -1,13 +1,16 @@
+from __future__ import absolute_import
+
 import os
 
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
-from django.core.files.storage import get_storage_class
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
+from django.core.files.storage import get_storage_class
 from django.http import HttpResponse
 
-from admin_resumable.files import ResumableFile
+from .files import ResumableFile
+from .settings import ADMIN_RESUMABLE_STORAGE
 
 
 def ensure_dir(f):
@@ -23,9 +26,10 @@ def get_chunks_subdir():
 def get_chunks_dir():
     chunks_subdir = get_chunks_subdir()
     media_root = getattr(settings, 'MEDIA_ROOT', None)
+
     if not media_root:
-        raise ImproperlyConfigured(
-            'You must set settings.MEDIA_ROOT')
+        raise ImproperlyConfigured('You must set settings.MEDIA_ROOT')
+
     chunks_dir = os.path.join(media_root, chunks_subdir)
     ensure_dir(chunks_dir)
     return chunks_dir
@@ -43,55 +47,57 @@ def get_storage(upload_to):
     init parameter.
     """
     if upload_to:
-        location = settings.MEDIA_ROOT + upload_to
-        url_path = settings.MEDIA_URL + upload_to
+        location = os.path.join(settings.MEDIA_ROOT, upload_to)
+        base_url = os.path.join(settings.MEDIA_URL, upload_to)
         ensure_dir(location)
     else:
-        url_path = settings.MEDIA_URL + get_chunks_subdir()
+        base_url = settings.MEDIA_URL + get_chunks_subdir()
         location = get_chunks_dir()
-    storage_class_name = getattr(
-        settings,
-        'ADMIN_RESUMABLE_STORAGE',
-        'django.core.files.storage.FileSystemStorage'
-    )
-    return get_storage_class(storage_class_name)(
-        location=location, base_url=url_path)
+
+    storage_class = get_storage_class(ADMIN_RESUMABLE_STORAGE)
+    return storage_class(location=location, base_url=base_url)
 
 
-def get_upload_to(request):
+def get_model_field(request):
+    """
+    Determine the model field for the uploaded file/chunk using the
+    'content_type_id' and 'field_name' request parameters.
+    """
+    params = request.GET
     if request.method == 'POST':
-        ct_id = request.POST['content_type_id']
-        field_name = request.POST['field_name']
-    else:
-        ct_id = request.GET['content_type_id']
-        field_name = request.GET['field_name']
+        params = request.POST
 
-    ct = ContentType.objects.get_for_id(ct_id)
-    model_cls = ct.model_class()
-    field = model_cls._meta.get_field(field_name)
-    return field.orig_upload_to
+    ctype = ContentType.objects.get_for_id(params['content_type_id'])
+    # noinspection PyProtectedMember
+    return ctype.model_class()._meta.get_field(params['field_name'])
 
 
 @staff_member_required
 def admin_resumable(request):
-    upload_to = get_upload_to(request)
-    storage = get_storage(upload_to)
+    field = get_model_field(request)
+    storage = get_storage(upload_to=field.orig_upload_to)
+
     if request.method == 'POST':
         chunk = request.FILES.get('file')
         r = ResumableFile(storage, request.POST)
         if not r.chunk_exists:
             r.process_chunk(chunk)
         if r.is_complete:
-            actual_filename = storage.save(r.filename, r.file)
+            actual_filename = storage.save(
+                r.filename, r.file, max_length=field.max_length
+            )
             r.delete_chunks()
             return HttpResponse(storage.url(actual_filename))
         return HttpResponse('chunk uploaded')
+
     elif request.method == 'GET':
         r = ResumableFile(storage, request.GET)
         if not r.chunk_exists:
             return HttpResponse('chunk not found', status=404)
         if r.is_complete:
-            actual_filename = storage.save(r.filename, r.file)
+            actual_filename = storage.save(
+                r.filename, r.file, max_length=field.max_length
+            )
             r.delete_chunks()
             return HttpResponse(storage.url(actual_filename))
         return HttpResponse('chunk exists')

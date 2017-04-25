@@ -3,44 +3,47 @@ import fnmatch
 
 from django.core.files.base import File
 
+from admin_resumable.settings import ADMIN_RESUMABLE_CHUNKSUFFIX, \
+    ADMIN_RESUMABLE_SIZE_PREFIX
+
 
 class ResumableFile(object):
-    def __init__(self, storage, kwargs):
+    def __init__(self, storage, params):
         self.storage = storage
-        self.kwargs = kwargs
-        self.chunk_suffix = "_part_"
+        self.params = params
+        self.chunk_suffix = ADMIN_RESUMABLE_CHUNKSUFFIX
 
     @property
     def chunk_exists(self):
-        """Checks if the requested chunk exists.
+        """
+        Checks if the requested chunk exists.
         """
         return self.storage.exists(self.current_chunk_name) and \
-               self.storage.size(self.current_chunk_name) == int(self.kwargs.get('resumableCurrentChunkSize'))
+               self.storage.size(self.current_chunk_name) == int(self.params.get('resumableCurrentChunkSize'))
 
     @property
     def chunk_names(self):
-        """Iterates over all stored chunks.
         """
-        chunks = []
+        Iterates over all stored chunks.
+        """
         files = sorted(self.storage.listdir('')[1])
         for file in files:
             if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
                                                 self.chunk_suffix)):
-                chunks.append(file)
-        return chunks
+                yield file
 
     @property
     def current_chunk_name(self):
         return "%s%s%s" % (
             self.filename,
             self.chunk_suffix,
-            self.kwargs.get('resumableChunkNumber').zfill(4)
+            self.params.get('resumableChunkNumber').zfill(4)
         )
 
     def chunks(self):
-        """Iterates over all stored chunks.
         """
-        chunks = []
+        Iterates over all stored chunks.
+        """
         files = sorted(self.storage.listdir('')[1])
         for file in files:
             if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
@@ -48,11 +51,13 @@ class ResumableFile(object):
                 yield self.storage.open(file, 'rb').read()
 
     def delete_chunks(self):
-        [self.storage.delete(chunk) for chunk in self.chunk_names]
+        for chunk in self.chunk_names:
+            self.storage.delete(chunk)
 
     @property
     def file(self):
-        """Gets the complete file.
+        """
+        Gets the complete file.
         """
         if not self.is_complete:
             raise Exception('Chunk(s) still missing')
@@ -61,29 +66,42 @@ class ResumableFile(object):
 
     @property
     def filename(self):
-        """Gets the filename."""
-        filename = self.kwargs.get('resumableFilename')
+        """
+        Gets the filename.
+        """
+        filename = self.params.get('resumableFilename')
         if '/' in filename:
             raise Exception('Invalid filename')
-        return "%s_%s" % (
-            self.kwargs.get('resumableTotalSize'),
-            filename
-        )
+
+        if ADMIN_RESUMABLE_SIZE_PREFIX:
+            return "%s_%s" % (
+                self.params.get('resumableTotalSize'),
+                filename
+            )
+
+        return filename
+
+    @property
+    def name(self):
+        return self.filename
 
     @property
     def is_complete(self):
-        """Checks if all chunks are already stored.
         """
-        return int(self.kwargs.get('resumableTotalSize')) == self.size
+        Checks if all chunks are already stored.
+        """
+        return int(self.params.get('resumableTotalSize')) == self.size
 
     def process_chunk(self, file):
         if self.storage.exists(self.current_chunk_name):
             self.storage.delete(self.current_chunk_name)
+        # chunk filenames are not limited by the field's max_length
         self.storage.save(self.current_chunk_name, file)
 
     @property
     def size(self):
-        """Gets chunks size.
+        """
+        Gets chunks size.
         """
         size = 0
         for chunk in self.chunk_names:
