@@ -75,7 +75,7 @@ Compatibility
 python 3.2 and 3.3 supported up to django 1.8.
 
 2.0:
-{py27,py34,py35}-django{1.8,1.9,1.10}
+{py27,py34,py35}-django{1.8,1.9,1.10,1.11}
 
 Thanks to
 ---------
