@@ -1,5 +1,4 @@
-import os
-
+# -*- coding: utf-8 -*-
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -13,10 +12,7 @@ from django.utils.encoding import force_text
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy
 
-from admin_resumable.conf import ADMIN_RESUMABLE_CHUNKSIZE, \
-    ADMIN_RESUMABLE_SHOW_THUMB, ADMIN_RESUMABLE_PARALLEL, \
-    ADMIN_RESUMABLE_FIRSTLAST, ADMIN_RESUMABLE_RETRIES
-from .views import get_storage
+from admin_resumable import conf
 
 
 class ResumableWidget(FileInput):
@@ -27,11 +23,11 @@ class ResumableWidget(FileInput):
         storage = get_storage()
 
         context = {
-            'chunkSize': ADMIN_RESUMABLE_CHUNKSIZE,
-            'simultaneousUploads': ADMIN_RESUMABLE_PARALLEL,
-            'prioritizeFirstAndLastChunk': ADMIN_RESUMABLE_FIRSTLAST,
-            'maxChunkRetries': ADMIN_RESUMABLE_RETRIES,
-            'show_thumb': ADMIN_RESUMABLE_SHOW_THUMB,
+            'chunkSize': conf.ADMIN_RESUMABLE_CHUNKSIZE,
+            'simultaneousUploads': conf.ADMIN_RESUMABLE_PARALLEL,
+            'prioritizeFirstAndLastChunk': conf.ADMIN_RESUMABLE_FIRSTLAST,
+            'maxChunkRetries': conf.ADMIN_RESUMABLE_RETRIES,
+            'show_thumb': conf.ADMIN_RESUMABLE_SHOW_THUMB,
         }
 
         # code adapted from Input.render()

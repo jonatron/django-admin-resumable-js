@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 import fnmatch
 
-from django.core.files.base import File
-
-from admin_resumable.conf import ADMIN_RESUMABLE_CHUNKSUFFIX, \
-    ADMIN_RESUMABLE_SUBDIR, ADMIN_RESUMABLE_SIZE_PREFIX
+from admin_resumable import conf
 
 
 class ResumableFile(object):
     def __init__(self, storage, params):
         self.storage = storage
         self.params = params
-        self.chunk_suffix = ADMIN_RESUMABLE_CHUNKSUFFIX
+        self.chunk_suffix = conf.ADMIN_RESUMABLE_CHUNKSUFFIX
 
     @property
     def chunk_exists(self):
@@ -73,7 +70,7 @@ class ResumableFile(object):
         if '/' in filename:
             raise Exception('Invalid filename')
 
-        if ADMIN_RESUMABLE_SIZE_PREFIX:
+        if conf.ADMIN_RESUMABLE_SIZE_PREFIX:
             return "%s_%s" % (
                 self.params.get('resumableTotalSize'),
                 filename
