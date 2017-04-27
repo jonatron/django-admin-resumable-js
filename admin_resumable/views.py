@@ -9,6 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import get_storage_class
 from django.http import HttpResponse
 
+from admin_resumable.utils import get_model_field
 from .files import ResumableFile
 from .conf import ADMIN_RESUMABLE_STORAGE
 
