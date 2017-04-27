@@ -98,7 +98,6 @@ class FormAdminResumableFileField(FileField):
 class ModelAdminResumableFileField(models.FileField):
     def __init__(self, verbose_name=None, name=None, upload_to='',
                  storage=None, **kwargs):
-        self.orig_upload_to = upload_to
         super(ModelAdminResumableFileField, self).__init__(
             verbose_name=verbose_name,
             name=name,
