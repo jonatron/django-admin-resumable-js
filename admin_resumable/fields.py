@@ -20,8 +20,6 @@ class ResumableWidget(FileInput):
     clear_checkbox_label = ugettext_lazy('Clear')
 
     def render(self, name, value, attrs=None):
-        storage = get_storage()
-
         context = {
             'chunkSize': conf.ADMIN_RESUMABLE_CHUNKSIZE,
             'simultaneousUploads': conf.ADMIN_RESUMABLE_PARALLEL,
@@ -35,7 +33,8 @@ class ResumableWidget(FileInput):
         if value:
             # Only add the 'value' attribute if a value is non-empty.
             file_name = force_text(self.format_value(value))
-            if file_name:
+            storage = getattr(value, 'storage', None)
+            if file_name and storage:
                 final_attrs['file_url'] = storage.url(file_name)
             final_attrs['value'] = file_name
         else:
