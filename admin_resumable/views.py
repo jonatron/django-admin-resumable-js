@@ -10,7 +10,7 @@ from django.core.files.storage import get_storage_class
 from django.http import HttpResponse
 
 from .files import ResumableFile
-from .settings import ADMIN_RESUMABLE_STORAGE
+from .conf import ADMIN_RESUMABLE_STORAGE
 
 
 def ensure_dir(f):

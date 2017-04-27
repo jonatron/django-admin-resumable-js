@@ -12,7 +12,7 @@ from django.templatetags.static import static
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy
 
-from admin_resumable.settings import ADMIN_RESUMABLE_CHUNKSIZE, \
+from admin_resumable.conf import ADMIN_RESUMABLE_CHUNKSIZE, \
     ADMIN_RESUMABLE_SHOW_THUMB, ADMIN_RESUMABLE_PARALLEL, \
     ADMIN_RESUMABLE_FIRSTLAST, ADMIN_RESUMABLE_RETRIES
 from .views import get_storage

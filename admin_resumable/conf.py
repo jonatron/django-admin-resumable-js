@@ -35,6 +35,11 @@ ADMIN_RESUMABLE_SHOW_THUMB = getattr(
 )
 
 # others
+ADMIN_RESUMABLE_SUBDIR = getattr(
+    settings,
+    'ADMIN_RESUMABLE_SUBDIR',
+    None
+)
 ADMIN_RESUMABLE_CHUNKSUFFIX = getattr(
     settings,
     'ADMIN_RESUMABLE_CHUNKSUFFIX',

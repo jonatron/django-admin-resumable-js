@@ -3,8 +3,8 @@ import fnmatch
 
 from django.core.files.base import File
 
-from admin_resumable.settings import ADMIN_RESUMABLE_CHUNKSUFFIX, \
-    ADMIN_RESUMABLE_SIZE_PREFIX
+from admin_resumable.conf import ADMIN_RESUMABLE_CHUNKSUFFIX, \
+    ADMIN_RESUMABLE_SUBDIR, ADMIN_RESUMABLE_SIZE_PREFIX
 
 
 class ResumableFile(object):
