@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 from django.conf.urls import url
 
-from . import views
+from admin_resumable.views import ResumableView
 
 urlpatterns = [
-    url(r'^admin_resumable/$', views.admin_resumable, name='admin_resumable'),
+    url(r'^upload/$', ResumableView.as_view(), name='admin_resumable'),
 ]
