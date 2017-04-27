@@ -9,6 +9,7 @@ from django.forms.widgets import CheckboxInput
 from django.forms.widgets import FileInput
 from django.template import loader
 from django.templatetags.static import static
+from django.utils.encoding import force_text
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy
 
@@ -29,29 +30,29 @@ class ResumableWidget(FileInput):
     template_name = 'admin_resumable/file_input.html'
     clear_checkbox_label = ugettext_lazy('Clear')
 
-    def render(self, name, value, attrs=None, **kwargs):
-        upload_to = get_upload_to(
-            self.attrs['content_type_id'], self.attrs['field_name'])
-        storage = get_storage(upload_to)
-        if value:
-            file_name = os.path.basename(value.name)
-            file_url = storage.url(file_name)
-        else:
-            file_url = ''
+    def render(self, name, value, attrs=None):
+        storage = get_storage()
 
         context = {
-            'name': name,
-            'value': value,
-            'id': attrs['id'],
             'chunkSize': ADMIN_RESUMABLE_CHUNKSIZE,
             'simultaneousUploads': ADMIN_RESUMABLE_PARALLEL,
             'prioritizeFirstAndLastChunk': ADMIN_RESUMABLE_FIRSTLAST,
             'maxChunkRetries': ADMIN_RESUMABLE_RETRIES,
             'show_thumb': ADMIN_RESUMABLE_SHOW_THUMB,
-            'field_name': self.attrs['field_name'],
-            'content_type_id': self.attrs['content_type_id'],
-            'file_url': file_url,
         }
+
+        # code adapted from Input.render()
+        final_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
+        if value:
+            # Only add the 'value' attribute if a value is non-empty.
+            file_name = force_text(self.format_value(value))
+            if file_name:
+                final_attrs['file_url'] = storage.url(file_name)
+            final_attrs['value'] = file_name
+        else:
+            final_attrs['value'] = ''
+
+        context.update(**final_attrs)
 
         if not self.is_required:
             template_with_clear = \
