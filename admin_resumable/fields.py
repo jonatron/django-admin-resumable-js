@@ -19,13 +19,6 @@ from admin_resumable.conf import ADMIN_RESUMABLE_CHUNKSIZE, \
 from .views import get_storage
 
 
-def get_upload_to(ct_id, field_name):
-    ct = ContentType.objects.get_for_id(ct_id)
-    model_cls = ct.model_class()
-    field = model_cls._meta.get_field(field_name)
-    return field.orig_upload_to
-
-
 class ResumableWidget(FileInput):
     template_name = 'admin_resumable/file_input.html'
     clear_checkbox_label = ugettext_lazy('Clear')
