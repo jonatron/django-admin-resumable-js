@@ -13,10 +13,6 @@ from .files import ResumableFile
 from .conf import ADMIN_RESUMABLE_STORAGE
 
 
-def ensure_dir(f):
-    d = os.path.dirname(f)
-    if not os.path.exists(d):
-        os.makedirs(d)
 
 
 def get_chunks_subdir():
