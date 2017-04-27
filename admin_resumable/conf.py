@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.conf import settings
 
 # resumable.js settings
@@ -28,6 +29,7 @@ ADMIN_RESUMABLE_RETRIES = getattr(
 )
 
 # widget settings
+
 ADMIN_RESUMABLE_SHOW_THUMB = getattr(
     settings,
     'ADMIN_RESUMABLE_SHOW_THUMB',
@@ -35,11 +37,7 @@ ADMIN_RESUMABLE_SHOW_THUMB = getattr(
 )
 
 # others
-ADMIN_RESUMABLE_SUBDIR = getattr(
-    settings,
-    'ADMIN_RESUMABLE_SUBDIR',
-    None
-)
+
 ADMIN_RESUMABLE_CHUNKSUFFIX = getattr(
     settings,
     'ADMIN_RESUMABLE_CHUNKSUFFIX',
