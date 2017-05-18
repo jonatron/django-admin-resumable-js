@@ -30,11 +30,16 @@ Installation
 
 Optionally:
 
-* Set ``ADMIN_RESUMABLE_SUBDIR``, default is ``'admin_uploaded'``
-* Use upload_to instead of ADMIN_RESUMABLE_SUBDIR
 * Set ``ADMIN_RESUMABLE_CHUNKSIZE``, default is ``"1*1024*1024"``
 * Set ``ADMIN_RESUMABLE_STORAGE``, default is ``'django.core.files.storage.FileSystemStorage'`` (must be a subclass of ``django.core.files.storage.FileSystemStorage``, or accept the ``location`` init parameter).  If you don't want the default FileSystemStorage behaviour of creating new files on the server with filenames appended with _1, _2, etc for consecutive uploads of the same file, then you could use this to set your storage class to something like https://djangosnippets.org/snippets/976/
 * Set ``ADMIN_RESUMABLE_SHOW_THUMB``, default is False. Shows a thumbnail next to the "Currently:" link.
+
+resumable.js settings:
+
+* ``ADMIN_RESUMABLE_PARALLEL``, default: 3
+* ``ADMIN_RESUMABLE_FIRSTLAST``, default: ``False``
+* ``ADMIN_RESUMABLE_RETRIES``, default: ``None``
+
 
 South
 -----
@@ -59,6 +64,17 @@ Versions
 1.2: Django 1.9 Compatibility
 
 2.0: Added upload_to
+
+2.0.fdemmer: prerelease/fork versions with a lot of rewrites
+
+* updated resumable.js to 1.0.3
+* add resumable.js configuration variables like ADMIN_RESUMABLE_PARALLEL, ...
+* remove ADMIN_RESUMABLE_SUBDIR, use a different storage to customize that
+* rewrite the upload view as CBV
+* change path of upload view to upload/
+* show value of FileField rather than the URL in the widget
+* fix to respect max_length of FileField
+* fix in render() to work when value is a string
 
 
 [1] Django silently truncates incomplete chunks, due to the way the multipart

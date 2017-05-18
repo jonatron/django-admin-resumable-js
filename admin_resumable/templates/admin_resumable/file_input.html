@@ -14,11 +14,14 @@
         var r = new Resumable({
             target: '{% url 'admin_resumable' %}',
             chunkSize: {{ chunkSize }},
+            simultaneousUploads: {{ simultaneousUploads }},
+            prioritizeFirstAndLastChunk: {{ prioritizeFirstAndLastChunk|yesno:"true,false,undefined" }},
+            maxChunkRetries: {{ maxChunkRetries|yesno:"true,false,undefined" }},
             query: {
                 csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
                 field_name: '{{ field_name }}',
                 content_type_id: '{{ content_type_id }}'
-            },
+            }
         });
         r.assignBrowse($('#{{ id }}_input_file'));
         r.on('fileAdded', function(file) {
@@ -40,15 +43,14 @@
     });
 
 })(django.jQuery);
-
-
 </script>
+
 <div id="container">
     <p class="file-upload">
         {% if value %}
             Currently:
             {% if file_url %}
-                <a id="{{ id }}_link" target="_new" href="{{ file_url }}">{{ file_url }}</a>
+                <a id="{{ id }}_link" target="_new" href="{{ file_url }}">{{ value }}</a>
                 {% if show_thumb %}
                     <img src="{{ file_url }}" style="width:250px;">
                 {% endif %}
