@@ -43,11 +43,11 @@ def get_storage(upload_to):
     init parameter.
     """
     if upload_to:
-        location = settings.MEDIA_ROOT + upload_to
-        url_path = settings.MEDIA_URL + upload_to
+        location = os.path.join(settings.MEDIA_ROOT, upload_to)
+        url_path = os.path.join(settings.MEDIA_URL, upload_to)
         ensure_dir(location)
     else:
-        url_path = settings.MEDIA_URL + get_chunks_subdir()
+        url_path = os.path.join(settings.MEDIA_URL, get_chunks_subdir())
         location = get_chunks_dir()
     storage_class_name = getattr(
         settings,

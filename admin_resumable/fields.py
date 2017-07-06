@@ -93,11 +93,10 @@ class FormAdminResumableFileField(FileField):
 
 
 class ModelAdminResumableFileField(models.FileField):
-    def __init__(self, verbose_name=None, name=None, upload_to='',
-                 storage=None, **kwargs):
-        self.orig_upload_to = upload_to
-        super(ModelAdminResumableFileField, self).__init__(
-            verbose_name, name, 'unused', **kwargs)
+
+    @property
+    def orig_upload_to(self):
+        return self.get_directory_name()
 
     def formfield(self, **kwargs):
         content_type_id = ContentType.objects.get_for_model(self.model).id
