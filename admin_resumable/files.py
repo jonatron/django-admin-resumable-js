@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-from StringIO import StringIO
-
 import fnmatch
-
-from django.core.files.base import File
 
 
 class ResumableFile(object):
@@ -54,7 +50,8 @@ class ResumableFile(object):
 
     @property
     def file(self):
-        """Gets the complete file.
+        """
+        Merges file and returns its file pointer
         """
         if not self.is_complete:
             raise Exception('Chunk(s) still missing')
@@ -63,7 +60,8 @@ class ResumableFile(object):
             for chunk in self.chunk_names:
                 output_file.write(self.storage.open(chunk).read())
         except Exception:
-            import pdb; pdb.set_trace()
+            output_file.close()
+            raise
         return output_file
 
     @property

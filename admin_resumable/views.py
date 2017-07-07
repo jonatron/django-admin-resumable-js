@@ -1,15 +1,26 @@
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.contenttypes.models import ContentType
+from django.utils.functional import cached_property
 from django.http import HttpResponse
-
+from django.views.generic import View
 from admin_resumable.files import ResumableFile
-from admin_resumable.helpers import get_upload_to, get_storage
+from admin_resumable.helpers import get_storage
 
 
-@staff_member_required
-def admin_resumable(request):
-    upload_to = get_upload_to(request)      # basically get_directory_name for proper content type and its field
-    storage = get_storage(upload_to)        # storage class with proper parameters
-    if request.method == 'POST':
+class UploadView(View):
+    # inspired by another fork https://github.com/fdemmer/django-admin-resumable-js
+
+    @cached_property
+    def params(self):
+        return getattr(self.request, self.request.method)
+
+    def model_field(self):
+        ctype = ContentType.objects.get_for_id(self.params['content_type_id'])
+        return ctype.model_class()._meta.get_field(self.params['field_name'])
+
+    def post(self, request, *args, **kwargs):
+        upload_to = self.model_field().orig_upload_to
+        storage = get_storage(upload_to)
         chunk = request.FILES.get('file')
         r = ResumableFile(storage, request.POST)
         if not r.chunk_exists:
@@ -19,7 +30,10 @@ def admin_resumable(request):
             r.delete_chunks()
             return HttpResponse(storage.url(actual_filename))
         return HttpResponse('chunk uploaded')
-    elif request.method == 'GET':
+
+    def get(self, request, *args, **kwargs):
+        upload_to = self.model_field().orig_upload_to
+        storage = get_storage(upload_to)
         r = ResumableFile(storage, request.GET)
         if not r.chunk_exists:
             return HttpResponse('chunk not found', status=404)
@@ -28,3 +42,6 @@ def admin_resumable(request):
             r.delete_chunks()
             return HttpResponse(storage.url(actual_filename))
         return HttpResponse('chunk exists')
+
+
+admin_resumable = staff_member_required(UploadView.as_view())

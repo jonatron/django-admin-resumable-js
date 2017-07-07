@@ -55,22 +55,3 @@ def get_storage(upload_to):
     if storage_class_name == 'django.core.files.storage.FileSystemStorage':
         return storage_class(location=location, base_url=url_path)
     return storage_class()
-
-
-def get_upload_to(request):
-    """
-    Returns upload_to location for specified content type and field name
-    """
-    # TODO: pass values, not request
-    if request.method == 'POST':
-        ct_id = request.POST['content_type_id']
-        field_name = request.POST['field_name']
-    else:
-        ct_id = request.GET['content_type_id']
-        field_name = request.GET['field_name']
-
-    ct = ContentType.objects.get_for_id(ct_id)
-    model_cls = ct.model_class()
-    field = model_cls._meta.get_field(field_name)
-    return field.orig_upload_to
-
