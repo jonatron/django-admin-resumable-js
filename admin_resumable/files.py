@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from StringIO import StringIO
+
 import fnmatch
 
 from django.core.files.base import File
@@ -7,6 +9,7 @@ from django.core.files.base import File
 class ResumableFile(object):
     def __init__(self, storage, kwargs):
         self.storage = storage
+        # TODO: use actual properties instead of dict
         self.kwargs = kwargs
         self.chunk_suffix = "_part_"
 
@@ -40,7 +43,6 @@ class ResumableFile(object):
     def chunks(self):
         """Iterates over all stored chunks.
         """
-        chunks = []
         files = sorted(self.storage.listdir('')[1])
         for file in files:
             if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
@@ -56,8 +58,13 @@ class ResumableFile(object):
         """
         if not self.is_complete:
             raise Exception('Chunk(s) still missing')
-
-        return self
+        output_file = open('buffer_{}'.format(self.filename), 'w+b')
+        try:
+            for chunk in self.chunk_names:
+                output_file.write(self.storage.open(chunk).read())
+        except Exception:
+            import pdb; pdb.set_trace()
+        return output_file
 
     @property
     def filename(self):
