@@ -1,3 +1,4 @@
+{% load i18n %}
 <script>
 (function($) {
     $(function() {
@@ -46,7 +47,7 @@
 <div id="container">
     <p class="file-upload">
         {% if value %}
-            Currently:
+            {% trans 'Currently' %}:
             {% if file_url %}
                 <a id="{{ id }}_link" target="_new" href="{{ file_url }}">{{ file_url }}</a>
                 {% if show_thumb %}
@@ -57,7 +58,7 @@
             {% endif %}
             {{ clear_checkbox }}
             <br>
-            Change:
+            {% trans 'Change' %}:
         {% endif %}
 
         <span id="{{ id }}_uploaded_status"></span>
