@@ -37,23 +37,26 @@ class ResumableWidget(FileInput):
         else:
             file_url = ""
 
-        chunkSize = getattr(settings, 'ADMIN_RESUMABLE_CHUNKSIZE', "1*1024*1024")
+        chunk_size = getattr(settings, 'ADMIN_RESUMABLE_CHUNKSIZE', "1*1024*1024")
         show_thumb = getattr(settings, 'ADMIN_RESUMABLE_SHOW_THUMB', False)
-        context = {'name': name,
-                   'value': value,
-                   'id': attrs['id'],
-                   'chunkSize': chunkSize,
-                   'show_thumb': show_thumb,
-                   'field_name': self.attrs['field_name'],
-                   'content_type_id': self.attrs['content_type_id'],
-                   'file_url': file_url}
+        context = {
+            'name': name,
+            'value': value,
+            'id': attrs['id'],
+            'chunkSize': chunk_size,
+            'show_thumb': show_thumb,
+            'field_name': self.attrs['field_name'],
+            'content_type_id': self.attrs['content_type_id'],
+            'file_url': file_url
+        }
 
         if not self.is_required:
             template_with_clear = '<span class="clearable-file-input">%(clear)s <label for="%(clear_checkbox_id)s">%(clear_checkbox_label)s</label></span>'
-            substitutions = {}
-            substitutions['clear_checkbox_id'] = attrs['id'] + "-clear-id"
-            substitutions['clear_checkbox_name'] = attrs['id'] + "-clear"
-            substitutions['clear_checkbox_label'] = self.clear_checkbox_label
+            substitutions = {
+                'clear_checkbox_id': attrs['id'] + "-clear-id",
+                'clear_checkbox_name': attrs['id'] + "-clear",
+                'clear_checkbox_label': self.clear_checkbox_label
+            }
             substitutions['clear'] = CheckboxInput().render(
                 substitutions['clear_checkbox_name'],
                 False,

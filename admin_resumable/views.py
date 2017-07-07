@@ -54,8 +54,8 @@ def get_storage(upload_to):
         'ADMIN_RESUMABLE_STORAGE',
         'django.core.files.storage.FileSystemStorage'
     )
-    return get_storage_class(storage_class_name)(
-        location=location, base_url=url_path)
+    storage_class = get_storage_class(storage_class_name)
+    return storage_class(location=location, base_url=url_path)
 
 
 def get_upload_to(request):
