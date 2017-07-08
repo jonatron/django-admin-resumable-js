@@ -2,8 +2,6 @@
 import fnmatch
 import tempfile
 
-from django.core.files.base import File
-
 
 class ResumableFile(object):
     def __init__(self, chunk_storage, kwargs):
@@ -73,10 +71,7 @@ class ResumableFile(object):
         filename = self.kwargs.get('resumableFilename')
         if '/' in filename:
             raise Exception('Invalid filename')
-        value = "%s_%s" % (
-            self.kwargs.get('resumableTotalSize'),
-            filename
-        )
+        value = "%s_%s" % (self.kwargs.get('resumableTotalSize'), filename)
         return value
 
     @property
@@ -94,7 +89,7 @@ class ResumableFile(object):
     @property
     def size(self):
         """
-        Gets chunks size.
+        Gets size of all chunks combined.
         """
         size = 0
         for chunk in self.chunk_names:

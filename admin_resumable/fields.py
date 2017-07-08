@@ -35,6 +35,7 @@ class ResumableWidget(FileInput):
             file_name = os.path.basename(value.name)
             file_url = storage.url(file_name)
         else:
+            file_name = ""
             file_url = ""
 
         chunk_size = getattr(settings, 'ADMIN_RESUMABLE_CHUNKSIZE', "1*1024*1024")
@@ -47,7 +48,8 @@ class ResumableWidget(FileInput):
             'show_thumb': show_thumb,
             'field_name': self.attrs['field_name'],
             'content_type_id': self.attrs['content_type_id'],
-            'file_url': file_url
+            'file_url': file_url,
+            'file_name': file_name,
         }
 
         if not self.is_required:
