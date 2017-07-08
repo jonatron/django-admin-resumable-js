@@ -55,7 +55,11 @@ def get_storage(upload_to):
         'django.core.files.storage.FileSystemStorage'
     )
     storage_class = get_storage_class(storage_class_name)
-    return storage_class(location=location, base_url=url_path)
+    if storage_class_name == 'django.core.files.storage.FileSystemStorage':
+        storage = storage_class(location=location, base_url=url_path)
+    else:
+        storage = storage_class()
+    return storage
 
 
 def get_upload_to(request):
@@ -75,23 +79,27 @@ def get_upload_to(request):
 @staff_member_required
 def admin_resumable(request):
     upload_to = get_upload_to(request)
-    storage = get_storage(upload_to)
+    persistent_storage = get_storage(upload_to)
+    chunk_storage = get_storage_class('django.core.files.storage.FileSystemStorage')(
+        location=os.path.join(settings.MEDIA_ROOT, upload_to),
+        base_url=os.path.join(settings.MEDIA_URL, upload_to),
+    )
     if request.method == 'POST':
         chunk = request.FILES.get('file')
-        r = ResumableFile(storage, request.POST)
+        r = ResumableFile(chunk_storage, request.POST)
         if not r.chunk_exists:
             r.process_chunk(chunk)
         if r.is_complete:
-            actual_filename = storage.save(r.filename, r.file)
+            actual_filename = persistent_storage.save(r.filename, r.file)
             r.delete_chunks()
-            return HttpResponse(storage.url(actual_filename))
+            return HttpResponse(persistent_storage.url(actual_filename))
         return HttpResponse('chunk uploaded')
     elif request.method == 'GET':
-        r = ResumableFile(storage, request.GET)
+        r = ResumableFile(chunk_storage, request.GET)
         if not r.chunk_exists:
             return HttpResponse('chunk not found', status=404)
         if r.is_complete:
-            actual_filename = storage.save(r.filename, r.file)
+            actual_filename = persistent_storage.save(r.filename, r.file)
             r.delete_chunks()
-            return HttpResponse(storage.url(actual_filename))
+            return HttpResponse(persistent_storage.url(actual_filename))
         return HttpResponse('chunk exists')
