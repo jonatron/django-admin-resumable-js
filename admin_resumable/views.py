@@ -6,6 +6,8 @@ from django.core.files.storage import get_storage_class
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
+from django.utils.functional import cached_property
+from django.views.generic import View
 
 from admin_resumable.files import ResumableFile
 
@@ -62,29 +64,26 @@ def get_storage(upload_to):
     return storage
 
 
-def get_upload_to(request):
-    if request.method == 'POST':
-        ct_id = request.POST['content_type_id']
-        field_name = request.POST['field_name']
-    else:
-        ct_id = request.GET['content_type_id']
-        field_name = request.GET['field_name']
+class UploadView(View):
 
-    ct = ContentType.objects.get_for_id(ct_id)
-    model_cls = ct.model_class()
-    field = model_cls._meta.get_field(field_name)
-    return field.orig_upload_to
+    @cached_property
+    def request_data(self):
+        return getattr(self.request, self.request.method)
 
+    def model_upload_field(self):
+        content_type_id = self.request_data['content_type_id']
+        field_name = self.request_data['field_name']
+        content_type = ContentType.objects.get_for_id(content_type_id)
+        model_class = content_type.model_class()
+        return model_class._meta.get_field(field_name)
 
-@staff_member_required
-def admin_resumable(request):
-    upload_to = get_upload_to(request)
-    persistent_storage = get_storage(upload_to)
-    chunk_storage = get_storage_class('django.core.files.storage.FileSystemStorage')(
-        location=os.path.join(settings.MEDIA_ROOT, upload_to),
-        base_url=os.path.join(settings.MEDIA_URL, upload_to),
-    )
-    if request.method == 'POST':
+    def post(self, request, *args, **kwargs):
+        upload_to = self.model_upload_field().orig_upload_to
+        persistent_storage = get_storage(upload_to)
+        chunk_storage = get_storage_class('django.core.files.storage.FileSystemStorage')(
+            location=os.path.join(settings.MEDIA_ROOT, upload_to),
+            base_url=os.path.join(settings.MEDIA_URL, upload_to),
+        )
         chunk = request.FILES.get('file')
         r = ResumableFile(chunk_storage, request.POST)
         if not r.chunk_exists:
@@ -94,7 +93,14 @@ def admin_resumable(request):
             r.delete_chunks()
             return HttpResponse(persistent_storage.url(actual_filename))
         return HttpResponse('chunk uploaded')
-    elif request.method == 'GET':
+
+    def get(self, request, *args, **kwargs):
+        upload_to = self.model_upload_field().orig_upload_to
+        persistent_storage = get_storage(upload_to)
+        chunk_storage = get_storage_class('django.core.files.storage.FileSystemStorage')(
+            location=os.path.join(settings.MEDIA_ROOT, upload_to),
+            base_url=os.path.join(settings.MEDIA_URL, upload_to),
+        )
         r = ResumableFile(chunk_storage, request.GET)
         if not r.chunk_exists:
             return HttpResponse('chunk not found', status=404)
@@ -103,3 +109,6 @@ def admin_resumable(request):
             r.delete_chunks()
             return HttpResponse(persistent_storage.url(actual_filename))
         return HttpResponse('chunk exists')
+
+
+admin_resumable = staff_member_required(UploadView.as_view())
