@@ -13,7 +13,7 @@ from django.utils.translation import ugettext_lazy
 from django.utils.safestring import mark_safe
 from django.contrib.contenttypes.models import ContentType
 
-from .helpers import get_storage
+from .helpers import get_persistent_storage
 
 
 def get_upload_to(ct_id, field_name):
@@ -21,7 +21,7 @@ def get_upload_to(ct_id, field_name):
     ct = ContentType.objects.get_for_id(ct_id)
     model_cls = ct.model_class()
     field = model_cls._meta.get_field(field_name)
-    return field.orig_upload_to
+    return field.upload_to
 
 
 class ResumableWidget(FileInput):
@@ -29,11 +29,11 @@ class ResumableWidget(FileInput):
     clear_checkbox_label = ugettext_lazy('Clear')
 
     def render(self, name, value, attrs=None, **kwargs):
-        upload_to = get_upload_to(self.attrs['content_type_id'], self.attrs['field_name'])
-        storage = get_storage(upload_to)
+        persistent_storage = get_persistent_storage()
         if value:
+            # TODO: fix presented file url, basename works properly for
             file_name = os.path.basename(value.name)
-            file_url = storage.url(file_name)
+            file_url = persistent_storage.url(file_name)
         else:
             file_name = ""
             file_url = ""
@@ -98,10 +98,6 @@ class FormAdminResumableFileField(FileField):
 
 
 class ModelAdminResumableFileField(models.FileField):
-
-    @property
-    def orig_upload_to(self):
-        return self.get_directory_name()
 
     def formfield(self, **kwargs):
         content_type_id = ContentType.objects.get_for_model(self.model).id
