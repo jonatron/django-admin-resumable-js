@@ -18,17 +18,27 @@ class UploadView(View):
     def request_data(self):
         return getattr(self.request, self.request.method)
 
+    @cached_property
     def model_upload_field(self):
         content_type = ContentType.objects.get_for_id(self.request_data['content_type_id'])
         return content_type.model_class()._meta.get_field(self.request_data['field_name'])
 
-    def post(self, request, *args, **kwargs):
-        upload_to = self.model_upload_field().orig_upload_to
-        persistent_storage = get_storage(upload_to)
+    def _get_upload_to(self):
+        return self.model_upload_field.orig_upload_to
+
+    def get_chunk_storage(self):
         chunk_storage = get_storage_class('django.core.files.storage.FileSystemStorage')(
-            location=os.path.join(settings.MEDIA_ROOT, upload_to),
-            base_url=os.path.join(settings.MEDIA_URL, upload_to),
+            location=os.path.join(settings.MEDIA_ROOT, self._get_upload_to()),
+            base_url=os.path.join(settings.MEDIA_URL, self._get_upload_to()),
         )
+        return chunk_storage
+
+    def get_persistent_storage(self):
+        return get_storage(self._get_upload_to())
+
+    def post(self, request, *args, **kwargs):
+        persistent_storage = self.get_persistent_storage()
+        chunk_storage = self.get_chunk_storage()
         chunk = request.FILES.get('file')
         r = ResumableFile(chunk_storage, request.POST)
         if not r.chunk_exists:
@@ -40,12 +50,8 @@ class UploadView(View):
         return HttpResponse('chunk uploaded')
 
     def get(self, request, *args, **kwargs):
-        upload_to = self.model_upload_field().orig_upload_to
-        persistent_storage = get_storage(upload_to)
-        chunk_storage = get_storage_class('django.core.files.storage.FileSystemStorage')(
-            location=os.path.join(settings.MEDIA_ROOT, upload_to),
-            base_url=os.path.join(settings.MEDIA_URL, upload_to),
-        )
+        persistent_storage = self.get_persistent_storage()
+        chunk_storage = self.get_chunk_storage()
         r = ResumableFile(chunk_storage, request.GET)
         if not r.chunk_exists:
             return HttpResponse('chunk not found', status=404)
