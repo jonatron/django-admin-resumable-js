@@ -4,6 +4,16 @@ import tempfile
 
 
 class ResumableFile(object):
+    """
+    Handles file saving and processing.
+    It must only have access to chunk storage where it saves file chunks.
+    When all chunks are uploaded it collects and merges them returning temporary file pointer
+    that can be used to save the complete file to persistent storage.
+
+    Chunk storage should preferably be some local storage to avoid traffic
+    as files usually must be downloaded to server as chunks and re-uploaded as complete files.
+    """
+
     def __init__(self, chunk_storage, kwargs):
         self.chunk_storage = chunk_storage
         self.kwargs = kwargs
@@ -82,6 +92,9 @@ class ResumableFile(object):
         return int(self.kwargs.get('resumableTotalSize')) == self.size
 
     def process_chunk(self, file):
+        """
+        Saves chunk to chunk storage.
+        """
         if self.chunk_storage.exists(self.current_chunk_name):
             self.chunk_storage.delete(self.current_chunk_name)
         self.chunk_storage.save(self.current_chunk_name, file)
