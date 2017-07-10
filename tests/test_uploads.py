@@ -68,7 +68,7 @@ def test_fake_file_upload(admin_user, admin_client):
     r = {
         'CONTENT_LENGTH': len(payload),
         'CONTENT_TYPE': client_module.MULTIPART_CONTENT,
-        'PATH_INFO': "/admin_resumable/admin_resumable/",
+        'PATH_INFO': "/admin_resumable/upload/",
         'REQUEST_METHOD': 'POST',
         'wsgi.input': payload,
     }
