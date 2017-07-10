@@ -54,7 +54,7 @@ class ResumableFile(object):
     @property
     def file(self):
         """
-        Gets the complete file.
+        Merges file and returns its file pointer.
         """
         if not self.is_complete:
             raise Exception('Chunk(s) still missing')

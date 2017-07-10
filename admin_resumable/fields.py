@@ -13,10 +13,11 @@ from django.utils.translation import ugettext_lazy
 from django.utils.safestring import mark_safe
 from django.contrib.contenttypes.models import ContentType
 
-from .views import get_storage
+from .helpers import get_storage
 
 
 def get_upload_to(ct_id, field_name):
+    # TODO: merge with helpers get_upload_to()
     ct = ContentType.objects.get_for_id(ct_id)
     model_cls = ct.model_class()
     field = model_cls._meta.get_field(field_name)
@@ -28,8 +29,7 @@ class ResumableWidget(FileInput):
     clear_checkbox_label = ugettext_lazy('Clear')
 
     def render(self, name, value, attrs=None, **kwargs):
-        upload_to = get_upload_to(
-            self.attrs['content_type_id'], self.attrs['field_name'])
+        upload_to = get_upload_to(self.attrs['content_type_id'], self.attrs['field_name'])
         storage = get_storage(upload_to)
         if value:
             file_name = os.path.basename(value.name)
