@@ -76,7 +76,6 @@ def test_fake_file_upload(admin_user, admin_client):
     assert response.status_code == 200
     upload_filename = file_size + "_foo.bar"
     upload_path = os.path.join(settings.MEDIA_ROOT,
-                               'admin_uploaded',
                                upload_filename
                                )
     f = open(upload_path, 'r')
