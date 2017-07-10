@@ -38,7 +38,7 @@ class ResumableFile(object):
 
     @property
     def storage_filename(self):
-        return self.resumable_storage.generate_filename(self.filename, self.upload_to)
+        return self.resumable_storage.full_filename(self.filename, self.upload_to)
 
     @property
     def upload_to(self):
@@ -137,4 +137,4 @@ class ResumableFile(object):
     def collect(self):
         actual_filename = self.persistent_storage.save(self.storage_filename, File(self.file))
         self.delete_chunks()
-        return self.persistent_storage.url(actual_filename)
+        return actual_filename

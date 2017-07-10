@@ -23,9 +23,8 @@ class ResumableWidget(FileInput):
     def render(self, name, value, attrs=None, **kwargs):
         persistent_storage = ResumableStorage().get_persistent_storage()
         if value:
-            # TODO: fix presented file url, basename works properly for
             file_name = os.path.basename(value.name)
-            file_url = persistent_storage.url(file_name)
+            file_url = mark_safe(persistent_storage.url(value.name))
         else:
             file_name = ""
             file_url = ""

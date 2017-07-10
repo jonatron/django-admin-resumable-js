@@ -40,7 +40,7 @@ class ResumableStorage(object):
         storage_class = get_storage_class(self.persistent_storage_class_name)
         return storage_class(*args, **kwargs)
 
-    def generate_filename(self, filename, upload_to):
+    def full_filename(self, filename, upload_to):
         dirname = force_text(datetime.datetime.now().strftime(force_str(upload_to)))
         filename = posixpath.join(dirname, filename)
         return self.get_persistent_storage().generate_filename(filename)
