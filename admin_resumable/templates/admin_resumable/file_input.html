@@ -14,7 +14,7 @@
         }
         var r = new Resumable({
             target: '{% url 'admin_resumable' %}',
-            chunkSize: {{ chunkSize }},
+            chunkSize: {{ chunk_size }},
             query: {
                 csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
                 field_name: '{{ field_name }}',

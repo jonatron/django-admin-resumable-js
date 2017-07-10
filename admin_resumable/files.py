@@ -2,6 +2,11 @@
 import fnmatch
 import tempfile
 
+from django.core.files import File
+from django.utils.functional import cached_property
+
+from admin_resumable.storage import ResumableStorage
+
 
 class ResumableFile(object):
     """
@@ -14,10 +19,30 @@ class ResumableFile(object):
     as files usually must be downloaded to server as chunks and re-uploaded as complete files.
     """
 
-    def __init__(self, chunk_storage, kwargs):
-        self.chunk_storage = chunk_storage
+    def __init__(self, field, kwargs):
+        self.field = field
         self.kwargs = kwargs
         self.chunk_suffix = "_part_"
+
+    @cached_property
+    def resumable_storage(self):
+        return ResumableStorage()
+
+    @cached_property
+    def persistent_storage(self):
+        return self.resumable_storage.get_persistent_storage()
+
+    @cached_property
+    def chunk_storage(self):
+        return ResumableStorage().get_chunk_storage()
+
+    @property
+    def storage_filename(self):
+        return self.resumable_storage.generate_filename(self.filename, self.upload_to)
+
+    @property
+    def upload_to(self):
+        return self.field.upload_to
 
     @property
     def chunk_exists(self):
@@ -108,3 +133,8 @@ class ResumableFile(object):
         for chunk in self.chunk_names:
             size += self.chunk_storage.size(chunk)
         return size
+
+    def collect(self):
+        actual_filename = self.persistent_storage.save(self.storage_filename, File(self.file))
+        self.delete_chunks()
+        return self.persistent_storage.url(actual_filename)
