@@ -1,4 +1,5 @@
 import os
+from django.db.models.fields.files import FieldFile
 
 from django.forms.widgets import FileInput
 from django.forms import forms
@@ -23,8 +24,13 @@ class ResumableWidget(FileInput):
     def render(self, name, value, attrs=None, **kwargs):
         persistent_storage = ResumableStorage().get_persistent_storage()
         if value:
-            file_name = os.path.basename(value.name)
-            file_url = mark_safe(persistent_storage.url(value.name))
+            if isinstance(value, FieldFile):
+                value_name = value.name
+            else:
+                value_name = value
+            file_name = value
+            file_url = mark_safe(persistent_storage.url(value_name))
+
         else:
             file_name = ""
             file_url = ""

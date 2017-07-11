@@ -60,6 +60,10 @@ Versions
 
 2.0: Added upload_to
 
+2.0.1: Upload with two different storages for chunks and persistent storage
+
+2.0.2: Widget render fix
+
 
 [1] Django silently truncates incomplete chunks, due to the way the multipart
 parser works: https://github.com/django/django/blob/master/django/http/multipartparser.py
