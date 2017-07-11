@@ -37,7 +37,7 @@
     $.defaults = {
       chunkSize:1*1024*1024,
       forceChunkSize:false,
-      simultaneousUploads:3,
+      simultaneousUploads:1,
       fileParameterName:'file',
       throttleProgressCallbacks:0.5,
       query:{},
