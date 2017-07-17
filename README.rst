@@ -64,6 +64,8 @@ Versions
 
 2.0.2: Widget render fix
 
+2.0.3: Version fix
+
 
 [1] Django silently truncates incomplete chunks, due to the way the multipart
 parser works: https://github.com/django/django/blob/master/django/http/multipartparser.py
