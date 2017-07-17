@@ -14,7 +14,7 @@
         }
         var r = new Resumable({
             target: '{% url 'admin_resumable' %}',
-            chunkSize: {{ chunkSize }},
+            chunkSize: {{ chunk_size }},
             query: {
                 csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
                 field_name: '{{ field_name }}',
@@ -49,7 +49,7 @@
         {% if value %}
             {% trans 'Currently' %}:
             {% if file_url %}
-                <a id="{{ id }}_link" target="_new" href="{{ file_url }}">{{ file_url }}</a>
+                <a id="{{ id }}_link" target="_new" href="{{ file_url }}">{{ file_name }}</a>
                 {% if show_thumb %}
                     <img src="{{ file_url }}" style="width:250px;">
                 {% endif %}

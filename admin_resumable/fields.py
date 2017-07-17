@@ -1,4 +1,5 @@
 import os
+from django.db.models.fields.files import FieldFile
 
 from django.forms.widgets import FileInput
 from django.forms import forms
@@ -13,14 +14,7 @@ from django.utils.translation import ugettext_lazy
 from django.utils.safestring import mark_safe
 from django.contrib.contenttypes.models import ContentType
 
-from .views import get_storage
-
-
-def get_upload_to(ct_id, field_name):
-    ct = ContentType.objects.get_for_id(ct_id)
-    model_cls = ct.model_class()
-    field = model_cls._meta.get_field(field_name)
-    return field.orig_upload_to
+from .storage import ResumableStorage
 
 
 class ResumableWidget(FileInput):
@@ -28,13 +22,17 @@ class ResumableWidget(FileInput):
     clear_checkbox_label = ugettext_lazy('Clear')
 
     def render(self, name, value, attrs=None, **kwargs):
-        upload_to = get_upload_to(
-            self.attrs['content_type_id'], self.attrs['field_name'])
-        storage = get_storage(upload_to)
+        persistent_storage = ResumableStorage().get_persistent_storage()
         if value:
-            file_name = os.path.basename(value.name)
-            file_url = storage.url(file_name)
+            if isinstance(value, FieldFile):
+                value_name = value.name
+            else:
+                value_name = value
+            file_name = value
+            file_url = mark_safe(persistent_storage.url(value_name))
+
         else:
+            file_name = ""
             file_url = ""
 
         chunk_size = getattr(settings, 'ADMIN_RESUMABLE_CHUNKSIZE', "1*1024*1024")
@@ -43,11 +41,12 @@ class ResumableWidget(FileInput):
             'name': name,
             'value': value,
             'id': attrs['id'],
-            'chunkSize': chunk_size,
+            'chunk_size': chunk_size,
             'show_thumb': show_thumb,
             'field_name': self.attrs['field_name'],
             'content_type_id': self.attrs['content_type_id'],
-            'file_url': file_url
+            'file_url': file_url,
+            'file_name': file_name,
         }
 
         if not self.is_required:
@@ -96,10 +95,6 @@ class FormAdminResumableFileField(FileField):
 
 
 class ModelAdminResumableFileField(models.FileField):
-
-    @property
-    def orig_upload_to(self):
-        return self.get_directory_name()
 
     def formfield(self, **kwargs):
         content_type_id = ContentType.objects.get_for_model(self.model).id
