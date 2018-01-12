@@ -3,7 +3,6 @@ import fnmatch
 
 from django.core.files.base import File
 
-
 class ResumableFile(object):
     def __init__(self, storage, kwargs):
         self.storage = storage
@@ -24,8 +23,7 @@ class ResumableFile(object):
         chunks = []
         files = sorted(self.storage.listdir('')[1])
         for file in files:
-            if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
-                                                self.chunk_suffix)):
+            if file.startswith(self.filename+self.chunk_suffix):
                 chunks.append(file)
         return chunks
 
@@ -74,6 +72,7 @@ class ResumableFile(object):
     def is_complete(self):
         """Checks if all chunks are already stored.
         """
+        print("resumableTotalSize",int(self.kwargs.get('resumableTotalSize')),": size",self.size)
         return int(self.kwargs.get('resumableTotalSize')) == self.size
 
     def process_chunk(self, file):
