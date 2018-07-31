@@ -37,7 +37,8 @@ before_install:
   - export PATH=$PATH:$PWD/geckodriver
 
 install:
-    - pip install tox-travis
+    - pip install tox
+    - pip install virtualenv
 
 script:
     - tox -e $TOX_ENV
