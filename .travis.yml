@@ -6,19 +6,21 @@ python:
 sudo: false
 
 env:
-    - MOZ_HEADLESS=1
-    - TOX_ENV=py27-django1.8
-    - TOX_ENV=py27-django1.11
-    - TOX_ENV=py27-django2.0
-    - TOX_ENV=py35-django1.8
-    - TOX_ENV=py35-django1.11
-    - TOX_ENV=py35-django2.0
-    - TOX_ENV=py36-django1.8
-    - TOX_ENV=py36-django1.11
-    - TOX_ENV=py36-django2.0
-    - TOX_ENV=py37-django1.8
-    - TOX_ENV=py37-django1.11
-    - TOX_ENV=py37-django2.0
+    global:
+        - MOZ_HEADLESS=1
+    matrix:
+        - TOX_ENV=py27-django1.8
+        - TOX_ENV=py27-django1.11
+        - TOX_ENV=py27-django2.0
+        - TOX_ENV=py35-django1.8
+        - TOX_ENV=py35-django1.11
+        - TOX_ENV=py35-django2.0
+        - TOX_ENV=py36-django1.8
+        - TOX_ENV=py36-django1.11
+        - TOX_ENV=py36-django2.0
+        - TOX_ENV=py37-django1.8
+        - TOX_ENV=py37-django1.11
+        - TOX_ENV=py37-django2.0
 
 matrix:
     fast_finish: true
