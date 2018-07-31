@@ -30,11 +30,6 @@ matrix:
           dist: xenial
           sudo: true
           env:
-              - TOX_ENV=py37-django1.11
-        - python: 3.7
-          dist: xenial
-          sudo: true
-          env:
               - TOX_ENV=py37-django2.0
 
 env:
