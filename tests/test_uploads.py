@@ -200,7 +200,7 @@ def test_real_file_upload_with_upload_to(admin_user, live_server, driver):
     while i < 5:
         status_text = driver.find_element_by_id("id_bat_uploaded_status").text
         print("status_text", status_text)
-        if "Uploaded" in status_text and "5242881_test_%5Bsmall%5D_file_" in status_text:
+        if "Uploaded" in status_text and "5242881_test_" in status_text:
             return  # success
         time.sleep(1)
         i += 1
