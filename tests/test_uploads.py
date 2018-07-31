@@ -168,10 +168,10 @@ def test_real_file_upload(admin_user, live_server, driver):
     driver.find_element_by_id("id_bar").send_keys("bat")
     driver.find_element_by_id(
         'id_foo_input_file').send_keys(test_file_path)
-    status_text = driver.find_element_by_id("id_foo_uploaded_status").text
-    print("status_text", status_text)
     i = 0
     while i < 5:
+        status_text = driver.find_element_by_id("id_foo_uploaded_status").text
+        print("status_text", status_text)
         if "Uploaded" in status_text:
             return  # success
         time.sleep(1)
@@ -196,10 +196,10 @@ def test_real_file_upload_with_upload_to(admin_user, live_server, driver):
     driver.find_element_by_id("id_bar").send_keys("bat")
     driver.find_element_by_id(
         'id_bat_input_file').send_keys(test_file_path)
-    status_text = driver.find_element_by_id("id_bat_uploaded_status").text
-    print("status_text", status_text)
     i = 0
     while i < 5:
+        status_text = driver.find_element_by_id("id_bat_uploaded_status").text
+        print("status_text", status_text)
         if "Uploaded" in status_text:
             return  # success
         time.sleep(1)
