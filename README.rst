@@ -66,7 +66,8 @@ python 3.2 and 3.3 supported up to django 1.8.
 {py27,py34,py35}-django{1.8,1.9,1.10,1.11}
 
 3.0:
-{py27,py35,py36,py37}-django{1.11,2.0}
+{py27,py35,py36,py37}-django{1.11,2.0,2.1}
+python 2.7 supported up to django 1.11s
 
 
 Running Tests Locally

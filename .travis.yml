@@ -16,6 +16,11 @@ matrix:
           sudo: false
           env:
               - TOX_ENV=py35-django2.0
+        - python: 3.5
+          dist: trusty
+          sudo: false
+          env:
+              - TOX_ENV=py35-django2.1
         - python: 3.6
           dist: trusty
           sudo: false
@@ -26,11 +31,21 @@ matrix:
           sudo: false
           env:
               - TOX_ENV=py36-django2.0
+        - python: 3.6
+          dist: trusty
+          sudo: false
+          env:
+              - TOX_ENV=py36-django2.1
         - python: 3.7
           dist: xenial
           sudo: true
           env:
               - TOX_ENV=py37-django2.0
+        - python: 3.7
+          dist: xenial
+          sudo: true
+          env:
+              - TOX_ENV=py37-django2.1
 
 env:
     global:
