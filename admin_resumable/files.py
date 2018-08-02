@@ -23,10 +23,10 @@ class ResumableFile(object):
         """
         chunks = []
         files = sorted(self.storage.listdir('')[1])
-        for file in files:
-            if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
-                                                self.chunk_suffix)):
-                chunks.append(file)
+        for f in files:
+            if f.startswith('{}{}'.format(
+                    self.filename, self.chunk_suffix)):
+                chunks.append(f)
         return chunks
 
     @property
@@ -40,12 +40,11 @@ class ResumableFile(object):
     def chunks(self):
         """Iterates over all stored chunks.
         """
-        chunks = []
         files = sorted(self.storage.listdir('')[1])
-        for file in files:
-            if fnmatch.fnmatch(file, '%s%s*' % (self.filename,
-                                                self.chunk_suffix)):
-                yield self.storage.open(file, 'rb').read()
+        for f in files:
+            if f.startswith('{}{}'.format(
+                    self.filename, self.chunk_suffix)):
+                yield self.storage.open(f, 'rb').read()
 
     def delete_chunks(self):
         [self.storage.delete(chunk) for chunk in self.chunk_names]
@@ -74,6 +73,7 @@ class ResumableFile(object):
     def is_complete(self):
         """Checks if all chunks are already stored.
         """
+        print("resumableTotalSize",int(self.kwargs.get('resumableTotalSize')),": size",self.size)
         return int(self.kwargs.get('resumableTotalSize')) == self.size
 
     def process_chunk(self, file):
