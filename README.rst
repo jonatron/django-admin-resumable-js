@@ -48,6 +48,8 @@ Versions
 
 2.0: Added upload_to
 
+3.0: New Django/Python compatibility
+
 
 [1] Django silently truncates incomplete chunks, due to the way the multipart
 parser works: https://github.com/django/django/blob/master/django/http/multipartparser.py
