@@ -1,6 +1,15 @@
 django-admin-resumable-js
 =========================
 
+Abandoned Notice
+----------------
+
+This app is now abandoned. Please see https://github.com/DataGreed/django-admin-async-upload for an updated fork.
+
+
+Summary
+-------
+
 .. image:: https://api.travis-ci.org/jonatron/django-admin-resumable-js.svg?branch=master
    :target: https://travis-ci.org/jonatron/django-admin-resumable-js
 
