@@ -32,12 +32,14 @@ class ResumableWidget(FileInput):
             self.attrs['content_type_id'], self.attrs['field_name'])
         storage = get_storage(upload_to)
         if value:
-            file_name = os.path.basename(value.name)
+            file_name = os.path.basename(value.name) if hasattr(
+                value, 'name') else os.path.basename(value)
             file_url = storage.url(file_name)
         else:
             file_url = ""
 
-        chunkSize = getattr(settings, 'ADMIN_RESUMABLE_CHUNKSIZE', "1*1024*1024")
+        chunkSize = getattr(
+            settings, 'ADMIN_RESUMABLE_CHUNKSIZE', "1*1024*1024")
         show_thumb = getattr(settings, 'ADMIN_RESUMABLE_SHOW_THUMB', False)
         context = {'name': name,
                    'value': value,
